@@ -1,0 +1,1772 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Karting">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Fiche karting v10</title>
+<style>
+:root{--bg:#0f172a;--panel:#111827;--panel2:#1f2937;--line:#334155;--text:#e5e7eb;--muted:#94a3b8;--blue:#2563eb;--green:#15803d;--orange:#c2410c;--red:#7f1d1d}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0f172a,#111827 45%,#0f172a);color:var(--text);min-height:100vh}
+.wrap{max-width:880px;margin:0 auto;padding:14px 12px 130px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:17px;margin:0 0 10px;letter-spacing:.2px}
+.sub{font-size:12px;color:var(--muted);margin:0 0 10px}
+.section{background:rgba(17,24,39,.95);border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:13px;margin:0 0 12px;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.topcard{background:transparent;border:none;box-shadow:none;padding:4px 4px 6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:680px){.grid{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}.grid4{grid-template-columns:1fr 1fr}}
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;font-weight:500}
+input,select,textarea,button{font-family:inherit}
+input,select,textarea{width:100%;min-height:46px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:16px;appearance:none}
+input::placeholder,textarea::placeholder{color:#9ca3af;opacity:1}
+textarea{min-height:90px;resize:vertical}
+.small{font-size:12px;color:var(--muted)}
+.diag{background:#0b1220;border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:11px;line-height:1.4;font-size:14px}
+.minirow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:10px}
+.minirow button{min-height:44px;padding:0 14px;white-space:nowrap}
+.hint{font-size:11px;color:#94a3b8;margin-top:6px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 12px;background:rgba(15,23,42,.7);padding:6px;border-radius:14px;border:1px solid rgba(148,163,184,.18);position:sticky;top:0;z-index:10}
+.tab{min-height:42px;padding:0 8px;background:transparent;color:var(--muted);border:0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.tab.active{background:var(--blue);color:#fff}
+.view{display:none}.view.active{display:block}
+.sticky{position:fixed;left:0;right:0;bottom:0;background:rgba(15,23,42,.96);backdrop-filter:blur(10px);border-top:1px solid rgba(148,163,184,.18);padding:9px 10px calc(9px + env(safe-area-inset-bottom))}
+.actions{max-width:880px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+@media(max-width:680px){.actions{grid-template-columns:repeat(3,1fr)}}
+button{min-height:46px;border:0;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
+.btn1{background:var(--blue);color:#fff}.btn2{background:#334155;color:#fff}.btn3{background:var(--green);color:#fff}.btn4{background:var(--red);color:#fff}.btn5{background:var(--orange);color:#fff}
+.pill{display:inline-block;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;margin:1px}
+.pill-ok{background:#14532d;color:#bbf7d0}.pill-warn{background:#78350f;color:#fed7aa}.pill-bad{background:#7f1d1d;color:#fecaca}.pill-info{background:#1e3a8a;color:#bfdbfe}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 6px;border-bottom:1px solid rgba(148,163,184,.15);text-align:left}
+th{background:#0b1220;color:var(--muted);font-weight:600;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:#1e293b;color:var(--text);font-size:12px;border:1px solid rgba(148,163,184,.2)}
+.run-card{background:#0b1220;border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:11px;margin:0 0 8px;cursor:pointer}
+.run-card.selected{border-color:var(--blue);background:#0b1e3d}
+.run-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.run-title{font-weight:700;font-size:14px}
+.run-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.run-actions{display:flex;gap:6px;margin-top:8px}
+.run-actions button{min-height:34px;padding:0 10px;font-size:12px}
+.diff-cell{background:#3b1c00 !important;color:#fed7aa}
+.better-cell{background:#14532d !important;color:#bbf7d0;font-weight:700}
+.weather-box{background:#0b1e3d;border:1px solid #1e3a8a;border-radius:12px;padding:11px;margin-top:10px}
+.weather-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.lap-row{display:grid;grid-template-columns:24px 1fr 1fr 1fr 1fr;gap:5px;margin-bottom:5px;align-items:center}
+.lap-row .lap-num{color:var(--muted);font-size:13px;text-align:center}
+.lap-row input{min-height:40px;padding:8px 8px;font-size:14px}
+@media(max-width:680px){.lap-row{grid-template-columns:24px 1fr 1fr;gap:4px}.lap-row .partial-extra{display:none}}
+.alert{padding:10px;border-radius:10px;margin-top:10px;font-size:13px}
+.alert-ok{background:#14532d;color:#bbf7d0;border:1px solid #166534}
+.alert-warn{background:#78350f;color:#fed7aa;border:1px solid #92400e}
+.alert-bad{background:#7f1d1d;color:#fecaca;border:1px solid #991b1b}
+.collapsible{cursor:pointer;user-select:none;display:flex;justify-content:space-between;align-items:center}
+.collapsible::after{content:"▾";color:var(--muted);transition:transform .2s;font-size:14px;margin-left:8px}
+.collapsible.collapsed::after{transform:rotate(-90deg)}
+.collapsible.collapsed + .collapsible-body{display:none}
+.torque-result{font-size:22px;font-weight:800;color:#86efac;margin:6px 0}
+hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
+.check-row{display:flex;gap:10px;padding:8px 0;cursor:pointer;align-items:center;border-bottom:1px solid rgba(148,163,184,.08)}
+.check-row input{width:auto;min-height:auto;margin:0;width:20px;height:20px}
+.check-row.done{opacity:.5;text-decoration:line-through}
+
+/* Démulti — boutons +/- */
+.dem-pair{display:grid;grid-template-columns:44px 1fr 44px;gap:4px;align-items:stretch}
+.dem-pair input{min-height:44px;text-align:center}
+.dem-mini{min-height:44px;border:1px solid var(--line);background:#1f2937;color:#fff;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;padding:0;line-height:1}
+.dem-mini:active{background:#334155}
+
+/* Schéma kart visuel pour pressions */
+.kart-diagram{position:relative;background:#0b1220;border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:14px 8px;margin-top:10px}
+.kart-title{font-size:11px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700}
+.tires{display:grid;grid-template-columns:1fr 60px 1fr;gap:8px;align-items:center}
+.tire-col{display:flex;flex-direction:column;gap:8px}
+.tire-box{background:#1f2937;border:1px solid var(--line);border-radius:10px;padding:8px}
+.tire-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;text-align:center}
+.tire-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;align-items:end}
+.tire-sublabel{font-size:9px;color:var(--muted);text-align:center;margin-bottom:2px}
+.tire-grid input{min-height:36px;padding:5px 6px;font-size:13px;text-align:center;font-variant-numeric:tabular-nums}
+.delta{font-size:11px;font-weight:700;text-align:center;line-height:36px;color:var(--muted);font-variant-numeric:tabular-nums}
+.delta.up{color:#fed7aa;background:#78350f;border-radius:6px}
+.delta.down{color:#bfdbfe;background:#1e3a8a;border-radius:6px}
+.delta.ok{color:#bbf7d0;background:#14532d;border-radius:6px}
+.delta.bad{color:#fecaca;background:#7f1d1d;border-radius:6px}
+.kart-body{background:linear-gradient(180deg,#1a2235,#0f1726);border:1px solid var(--line);border-radius:8px;height:140px;display:flex;align-items:center;justify-content:center;position:relative}
+.kart-body::before{content:'AV';position:absolute;top:6px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted);letter-spacing:1px;font-weight:700}
+.kart-body::after{content:'AR';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted);letter-spacing:1px;font-weight:700}
+.kart-body-arrow{width:2px;height:60%;background:linear-gradient(180deg,var(--blue),transparent)}
+@media(max-width:680px){
+  .tires{grid-template-columns:1fr 40px 1fr;gap:5px}
+  .kart-body{height:120px}
+  .tire-grid input{font-size:12px;padding:4px 4px}
+  .tire-grid{gap:3px}
+}
+
+/* Print : retire les boutons et passe en clair pour PDF */
+@media print {
+  body{background:white;color:black}
+  .sticky,.tabs,.collapsible::after,#alfano_file,.run-actions,#weather_box,.alert,.btn1,.btn2,.btn3,.btn4,.btn5,#carb_analysis,#hist_search,#csv_output{display:none !important}
+  .section{background:white !important;color:black !important;border:1px solid #ccc !important;page-break-inside:avoid;box-shadow:none !important}
+  .section h2{color:black !important}
+  input,select,textarea{background:white !important;color:black !important;border:1px solid #999 !important}
+  .delta,.chip,.diag,.tire-box,.kart-body,.kart-diagram{background:white !important;color:black !important;border:1px solid #ccc !important}
+  .wrap{padding:8px;max-width:none}
+  .view{display:none !important}
+  #view-fiche{display:block !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="section topcard">
+    <h1>Fiche karting v10</h1>
+    <p class="sub">Fiche · Histo · Comparatif · Outils · Météo auto · Import Alfano</p>
+    <div id="edit_banner" style="display:none;background:#1e3a8a;color:#bfdbfe;padding:8px 12px;border-radius:10px;margin-top:8px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <span>✏️ Édition d'un run existant. <strong>Sauver</strong> = mise à jour.</span>
+      <button onclick="exitEditMode()" style="min-height:32px;padding:0 10px;font-size:12px;background:#334155;color:#fff">Quitter édition</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" type="button" data-view="fiche" onclick="switchView('fiche')">Fiche</button>
+    <button class="tab" type="button" data-view="history" onclick="switchView('history')">Histo <span id="hist-count" style="opacity:.7"></span></button>
+    <button class="tab" type="button" data-view="compare" onclick="switchView('compare')">Comp.</button>
+    <button class="tab" type="button" data-view="tools" onclick="switchView('tools')">Outils</button>
+  </div>
+
+  <!-- ========== VIEW : FICHE ========== -->
+  <div class="view active" id="view-fiche">
+
+    <div class="section">
+      <h2>Contexte</h2>
+      <div class="grid">
+        <div><label>Circuit</label>
+          <select id="circuit">
+            <option value=""></option>
+            <option>Aigues-Vives</option>
+            <option>Alès</option>
+            <option>Belmont</option>
+            <option>Berdery</option>
+            <option>Ganges</option>
+            <option>Layrac</option>
+            <option>Le Mans</option>
+            <option>Muret</option>
+            <option>Valence</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div><label>Session</label><select id="session"><option></option><option>Essai libres 1</option><option>Essai libres 2</option><option>Essai libres 3</option><option>Essai libres 4</option><option>Essai libres 5</option><option>Essai libres officiels</option><option>Essai qualificatif</option><option>Manche qualif 1</option><option>Manche qualif 2</option><option>Super Manche</option><option>Préfinale</option><option>Finale</option><option>Course</option><option>Autre</option></select></div>
+        <div><label>Date</label><input id="date" type="date"></div>
+        <div><label>Heure</label><input id="heure" type="time"></div>
+        <div><label>Pilote</label><select id="pilote"><option></option><option>Hugo</option><option>Jaouen</option><option>Louka</option><option>Autre</option></select></div>
+        <div><label>Grip</label><select id="grip"><option></option><option>Faible</option><option>Moyen</option><option>Fort</option><option>Très fort</option></select></div>
+      </div>
+      <div class="minirow" style="margin-top:10px">
+        <div><label>Météo auto (date + heure + circuit)</label></div>
+        <button class="btn1" type="button" onclick="fetchWeather()">🌤 Récupérer</button>
+      </div>
+      <div id="weather_box" class="weather-box" style="display:none"></div>
+    </div>
+
+    <div class="section">
+      <h2>Piste & pneus</h2>
+      <div class="grid">
+        <div><label>État de la piste</label><select id="piste_etat"><option></option><option>Sèche</option><option>Humide</option><option>Mouillée</option><option>Mixte</option></select></div>
+        <div><label>Temp piste (°C)</label><input id="temp_piste" inputmode="decimal" placeholder="Ex : 35"></div>
+        <div><label>Type de pneu</label><select id="pneu_type"><option></option><option>Slicks Ligue</option><option>Slicks Entraînement</option><option>Slicks neufs</option><option>Pluie</option></select></div>
+        <div><label>Type de jante</label><select id="jante_type"><option></option><option>OTK MXJ</option><option>OTK MXC</option><option>DWT M séries</option><option>Pluie</option><option>Autre</option></select></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Performance</h2>
+      <div class="grid">
+        <div><label>RPM max</label><input id="rpm_max" inputmode="numeric" placeholder="Ex : 15150"></div>
+        <div><label>RPM sortie virage lent</label><input id="rpm_sortie" inputmode="numeric" placeholder="Ex : 6000"></div>
+        <div><label>Vitesse maxi (km/h)</label><input id="speed_max" inputmode="decimal" placeholder="Ex : 103"></div>
+        <div><label>Vitesse mini (km/h)</label><input id="speed_min" inputmode="decimal" placeholder="Ex : 47"></div>
+        <div><label>EGT bas (vis L) °C</label><input id="egt_bas" inputmode="decimal" placeholder="Cible 380-440"></div>
+        <div><label>EGT haut (vis H) °C</label><input id="egt_haut" inputmode="decimal" placeholder="Cible 620-680"></div>
+        <div><label>CHT culasse (°C)</label><input id="cht" inputmode="decimal" placeholder="Ex : 180"></div>
+      </div>
+      <p class="small" style="margin:8px 0 0">Une seule sonde EGT sur le pot KA100, deux lectures : <strong>bas</strong> en sortie de virage lent (pilote vis L), <strong>haut</strong> en bout de ligne droite (pilote vis H).</p>
+      <div id="carb_analysis" class="alert" style="display:none;margin-top:10px"></div>
+      <div class="hint" id="carb_hint">Saisis EGT bas, EGT haut ou CHT pour l'analyse carburation.</div>
+      <details style="margin-top:10px;background:#0b1220;border:1px solid var(--line);border-radius:10px;padding:0;overflow:hidden">
+        <summary style="padding:10px 12px;cursor:pointer;font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;list-style:none;user-select:none">⚙️ Cibles EGT (avancé)</summary>
+        <div style="padding:10px 12px;border-top:1px solid var(--line)">
+          <div class="grid4">
+            <div><label>EGT haut min</label><input id="cible_haut_min" inputmode="numeric" placeholder="620"></div>
+            <div><label>EGT haut max</label><input id="cible_haut_max" inputmode="numeric" placeholder="680"></div>
+            <div><label>EGT bas min</label><input id="cible_bas_min" inputmode="numeric" placeholder="380"></div>
+            <div><label>EGT bas max</label><input id="cible_bas_max" inputmode="numeric" placeholder="440"></div>
+          </div>
+          <button class="btn2" type="button" onclick="resetCibles()" style="margin-top:8px;min-height:36px;font-size:12px">Réinitialiser aux valeurs par défaut</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="section">
+      <h2 class="collapsible" onclick="toggleSection(this)">Tours & partiels</h2>
+      <div class="collapsible-body">
+        <p class="small" style="margin:-2px 0 8px">Format : <code>1:12.345</code> ou <code>72.345</code>.</p>
+        <div class="lap-row" style="font-weight:700;color:var(--muted);font-size:11px">
+          <div></div><div>Tour</div><div>P1</div><div class="partial-extra">P2</div><div class="partial-extra">P3</div>
+        </div>
+        <div id="laps_container"></div>
+        <div class="diag" style="margin-top:10px;font-size:13px">
+          <div>Meilleur tour : <strong id="best_lap">—</strong> · Moyenne : <strong id="avg_lap">—</strong> · Constance σ : <strong id="std_lap">—</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Ressenti</h2>
+      <div class="grid">
+        <div><label>Entrée</label><select id="entree"><option></option><option>OK</option><option>Propre</option><option>Pousse</option><option>Trop agressif</option></select></div>
+        <div><label>Milieu</label><select id="milieu"><option></option><option>OK</option><option>Stable</option><option>Flottant</option></select></div>
+        <div><label>Sortie</label><select id="sortie"><option></option><option>OK</option><option>Bonne traction</option><option>Glisse</option><option>Molle</option></select></div>
+        <div><label>Freinage</label><select id="freinage"><option></option><option>OK</option><option>Stable</option><option>Instable</option></select></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Diagnostic</h2>
+      <p class="small">Si tu choisis un problème principal, il prime. Sinon le diagnostic se déduit des RPM et du ressenti.</p>
+      <div class="grid">
+        <div><label>Problème principal</label>
+          <select id="probleme">
+            <option></option><option>Sortie glisse</option><option>Sortie molle</option><option>Ne tourne pas</option>
+            <option>Survirage</option><option>Freinage instable</option><option>RPM trop bas</option><option>RPM trop haut</option>
+          </select>
+        </div>
+        <div><label>Action testée</label><input id="action_testee" placeholder="Ex : +5 mm voie AR"></div>
+      </div>
+      <div class="diag" style="margin-top:10px">
+        <div><strong>Cause probable :</strong> <span id="cause"></span></div>
+        <div><strong>Action suggérée :</strong> <span id="action"></span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="collapsible" onclick="toggleSection(this)">Châssis</h2>
+      <div class="collapsible-body">
+        <div class="grid">
+          <div><label>Hauteur fusée</label><input id="hauteur_fusee" placeholder="Ex : Position 2"></div>
+          <div><label>Chasse / Carrossage</label><input id="chasse_carr" placeholder="Ex : -1° / +1°"></div>
+          <div><label>Pincement</label><input id="pincement" placeholder="Ex : 0 mm"></div>
+          <div><label>Voie AV (mm)</label><input id="voie_av" inputmode="numeric" placeholder="Ex : 1280"></div>
+          <div><label>Voie AR (mm)</label><input id="voie_ar" inputmode="numeric" placeholder="Ex : 1390"></div>
+          <div><label>Barre AV</label><select id="barre_av"><option></option><option>Carbone</option><option>Alu ronde</option><option>Alu en V</option></select></div>
+          <div><label>Moyeux</label><select id="moyeux"><option></option><option>90 mm</option><option>95 mm</option><option>Court</option><option>Long</option></select></div>
+          <div><label>Axe AR hauteur</label><select id="axe_h"><option></option><option>Haut</option><option>Milieu</option><option>Bas</option></select></div>
+          <div><label>Axe AR longueur</label><select id="axe_l"><option></option><option>Court</option><option>Milieu</option><option>Long</option></select></div>
+          <div><label>Axe AR bridé</label><select id="axe_bride"><option></option><option>Bridé</option><option>Débridé</option></select></div>
+          <div><label>Pare-choc AR</label><select id="parechoc"><option></option><option>Libre</option><option>Serré</option></select></div>
+          <div><label>Type de chaîne</label><select id="type_chaine"><option></option><option>Standard</option><option>Joints toriques</option></select></div>
+          <div><label>Raidisseur</label><select id="raidisseur"><option></option><option>Sans</option><option>AV</option><option>AR</option><option>AV+AR</option></select></div>
+          <div><label>Rapport</label><input id="rapport" placeholder="Ex : 11x77"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="collapsible" onclick="toggleSection(this)">Masse</h2>
+      <div class="collapsible-body">
+        <div class="grid">
+          <div><label>Position siège</label><select id="siege_pos"><option></option><option>Avancé</option><option>Neutre</option><option>Reculé</option></select></div>
+          <div><label>Hauteur siège</label><select id="siege_h"><option></option><option>Bas</option><option>Moyen</option><option>Haut</option></select></div>
+          <div><label>Lest total (kg)</label><input id="lest_kg" inputmode="decimal" placeholder="Ex : 8"></div>
+          <div><label>Répartition lest</label><select id="lest_rep"><option></option><option>AV</option><option>AR</option><option>G</option><option>D</option><option>Mix</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Pressions · Schéma kart</h2>
+      <div class="minirow" style="margin-top:4px">
+        <div><label>Appliquer pression départ à toutes les roues</label><input id="all_froid" inputmode="decimal" placeholder="Ex : 0.65"></div>
+        <button class="btn2" type="button" onclick="applyAllPressures('froid')">Appliquer</button>
+      </div>
+      <div class="minirow">
+        <div><label>Appliquer pression arrivée à toutes les roues</label><input id="all_chaud" inputmode="decimal" placeholder="Ex : 0.90"></div>
+        <button class="btn2" type="button" onclick="applyAllPressures('chaud')">Appliquer</button>
+      </div>
+
+      <div class="kart-diagram">
+        <div class="kart-title">⟵ Sens de marche</div>
+        <div class="tires">
+          <!-- COLONNE GAUCHE -->
+          <div class="tire-col">
+            <div class="tire-box">
+              <div class="tire-label">AV G</div>
+              <div class="tire-grid">
+                <div><div class="tire-sublabel">Départ</div><input id="avg_f" inputmode="decimal" placeholder="0.65" oninput="updatePressureDelta()"></div>
+                <div><div class="tire-sublabel">Arrivée</div><input id="avg_c" inputmode="decimal" placeholder="0.90" oninput="updatePressureDelta()"></div>
+                <div><div class="tire-sublabel">Δ</div><div class="delta" id="d_avg">—</div></div>
+              </div>
+            </div>
+            <div class="tire-box">
+              <div class="tire-label">AR G</div>
+              <div class="tire-grid">
+                <div><div class="tire-sublabel">Départ</div><input id="arg_f" inputmode="decimal" placeholder="0.65" oninput="updatePressureDelta()"></div>
+                <div><div class="tire-sublabel">Arrivée</div><input id="arg_c" inputmode="decimal" placeholder="0.90" oninput="updatePressureDelta()"></div>
+                <div><div class="tire-sublabel">Δ</div><div class="delta" id="d_arg">—</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- KART CENTER -->
+          <div class="kart-body"><div class="kart-body-arrow"></div></div>
+          <!-- COLONNE DROITE -->
+          <div class="tire-col">
+            <div class="tire-box">
+              <div class="tire-label">AV D</div>
+              <div class="tire-grid">
+                <div><div class="tire-sublabel">Départ</div><input id="avd_f" inputmode="decimal" placeholder="0.65" oninput="updatePressureDelta()"></div>
+                <div><div class="tire-sublabel">Arrivée</div><input id="avd_c" inputmode="decimal" placeholder="0.90" oninput="updatePressureDelta()"></div>
+                <div><div class="tire-sublabel">Δ</div><div class="delta" id="d_avd">—</div></div>
+              </div>
+            </div>
+            <div class="tire-box">
+              <div class="tire-label">AR D</div>
+              <div class="tire-grid">
+                <div><div class="tire-sublabel">Départ</div><input id="ard_f" inputmode="decimal" placeholder="0.65" oninput="updatePressureDelta()"></div>
+                <div><div class="tire-sublabel">Arrivée</div><input id="ard_c" inputmode="decimal" placeholder="0.90" oninput="updatePressureDelta()"></div>
+                <div><div class="tire-sublabel">Δ</div><div class="delta" id="d_ard">—</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="pressure_warn" style="margin-top:10px;text-align:center"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Moteur</h2>
+      <div class="grid">
+        <div><label>Vis L</label><input id="vis_l" placeholder="Ex : 1 tour"></div>
+        <div><label>Vis H</label><input id="vis_h" placeholder="Ex : 1 tour"></div>
+        <div><label>Bougie</label><input id="bougie" placeholder="Ex : NGK BR10EG"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="collapsible collapsed" onclick="toggleSection(this)">Import Alfano 6 (CSV)</h2>
+      <div class="collapsible-body">
+        <p class="small">Sélectionne <strong>tous les fichiers</strong> du dossier Alfano d'un coup (SN*.csv + LAP_*.csv). Le parseur détecte automatiquement le format Alfano 6 et remplit RPM, EGT, chronos, partiels, circuit, pilote, date.</p>
+        <input type="file" id="alfano_file" accept=".csv,.txt,text/csv" multiple onchange="parseAlfano(event)">
+        <div id="alfano_result" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Commentaires</h2>
+      <textarea id="commentaires" placeholder="Ex : piste qui monte en grip, vent fort en ligne droite..."></textarea>
+    </div>
+
+    <div class="section">
+      <h2>CSV généré</h2>
+      <textarea id="csv_output" placeholder="Appuie sur CSV"></textarea>
+      <p class="small">Colle dans Excel, Notes, Mail ou WhatsApp.</p>
+    </div>
+
+  </div><!-- /view-fiche -->
+
+  <!-- ========== VIEW : HISTORIQUE ========== -->
+  <div class="view" id="view-history">
+    <div class="section">
+      <h2>Historique des runs</h2>
+      <input id="hist_search" placeholder="Rechercher : circuit, pilote, date..." oninput="renderHistory()" style="margin-bottom:10px">
+      <p class="small" id="hist_help">Tape sur 1 ou 2 runs pour les sélectionner, puis va dans l'onglet Comp.</p>
+      <div id="hist_list"></div>
+      <hr>
+      <div class="grid">
+        <button class="btn2" type="button" onclick="exportJSON()">Sauvegarde JSON</button>
+        <button class="btn2" type="button" onclick="document.getElementById('import_json').click()">Importer JSON</button>
+      </div>
+      <input type="file" id="import_json" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+    </div>
+  </div>
+
+  <!-- ========== VIEW : COMPARE ========== -->
+  <div class="view" id="view-compare">
+    <div class="section">
+      <h2>Comparatif de 2 runs</h2>
+      <p class="small" id="compare-empty">Aucun run sélectionné. Va dans Histo, coche 2 runs.</p>
+      <div id="compare_table" style="overflow-x:auto"></div>
+    </div>
+  </div>
+
+  <!-- ========== VIEW : OUTILS ========== -->
+  <div class="view" id="view-tools">
+
+    <div class="section">
+      <h2>Démultiplication KA100</h2>
+      <p class="small">Cible 15 000–15 200 tr/min en bout de ligne droite.</p>
+      <div class="grid3">
+        <div><label>Pignon actuel</label>
+          <div class="dem-pair">
+            <button class="dem-mini" type="button" onclick="stepDem('dem_pinion',-1)">−</button>
+            <input id="dem_pinion" type="number" value="11" min="8" max="15" oninput="calcDem()">
+            <button class="dem-mini" type="button" onclick="stepDem('dem_pinion',1)">+</button>
+          </div>
+        </div>
+        <div><label>Couronne actuelle</label>
+          <div class="dem-pair">
+            <button class="dem-mini" type="button" onclick="stepDem('dem_sprocket',-1)">−</button>
+            <input id="dem_sprocket" type="number" value="77" min="50" max="95" oninput="calcDem()">
+            <button class="dem-mini" type="button" onclick="stepDem('dem_sprocket',1)">+</button>
+          </div>
+        </div>
+        <div><label>RPM mesuré</label>
+          <div class="dem-pair">
+            <button class="dem-mini" type="button" onclick="stepDem('dem_rpm',-50)">−</button>
+            <input id="dem_rpm" type="number" value="15150" min="10000" max="18000" step="50" oninput="calcDem()">
+            <button class="dem-mini" type="button" onclick="stepDem('dem_rpm',50)">+</button>
+          </div>
+        </div>
+        <div><label>RPM cible</label>
+          <div class="dem-pair">
+            <button class="dem-mini" type="button" onclick="stepDem('dem_target',-50)">−</button>
+            <input id="dem_target" type="number" value="15000" min="14000" max="15500" step="50" oninput="calcDem()">
+            <button class="dem-mini" type="button" onclick="stepDem('dem_target',50)">+</button>
+          </div>
+        </div>
+        <div><label>Couronne min</label><input id="dem_cmin" type="number" value="60" min="40" max="95" oninput="calcDem()"></div>
+        <div><label>Couronne max</label><input id="dem_cmax" type="number" value="85" min="40" max="100" oninput="calcDem()"></div>
+      </div>
+      <div style="margin-top:10px;font-size:13px">
+        <span class="chip">Pignons :</span>
+        <label class="chip"><input type="checkbox" class="pcheck" value="10" checked onchange="calcDem()"> 10</label>
+        <label class="chip"><input type="checkbox" class="pcheck" value="11" checked onchange="calcDem()"> 11</label>
+        <label class="chip"><input type="checkbox" class="pcheck" value="12" onchange="calcDem()"> 12</label>
+        <label class="chip"><input type="checkbox" class="pcheck" value="13" onchange="calcDem()"> 13</label>
+      </div>
+      <div class="diag" id="dem_result" style="margin-top:10px"></div>
+      <h2 style="margin-top:14px;font-size:14px">Meilleurs choix</h2>
+      <table><thead><tr><th>Montage</th><th>Rapport</th><th>RPM est.</th><th>Δ cible</th></tr></thead><tbody id="dem_table"></tbody></table>
+      <h2 style="margin-top:14px;font-size:14px">Historique transmissions</h2>
+      <div style="overflow-x:auto"><table><thead><tr><th>Circuit</th><th>Contexte</th><th>Montage</th><th>Rapport</th></tr></thead><tbody id="dem_history"></tbody></table></div>
+    </div>
+
+    <div class="section">
+      <h2>Couples de serrage KA100</h2>
+      <p class="small">Source : manuel IAME MAN-086-FR p.29.</p>
+      <label>Pièce</label>
+      <select id="torque_part" onchange="updateTorqueRef()">
+        <option value=""></option>
+        <optgroup label="Moteur KA100">
+          <option value="20|26|Hex.20,8|M14×125 ×1|Bougie. NGK BR10EG, sec, ne pas lubrifier.">Bougie</option>
+          <option value="18|22|Hex.13|M8×125 ×4|Écrous de culasse. Serrage en croix moteur froid. Recontrôler après 1h.">Écrous culasse</option>
+          <option value="18|22|Hex.13|M8×125 ×2|Écrous collecteur d'échappement. Recontrôler après 1ère séance.">Collecteur échappement</option>
+          <option value="8|10|Allen 5|M6×1 ×4|Vis du groupe Reed (admission).">Groupe Reed</option>
+          <option value="5|6|Allen 4|M5×80 ×3|Vis de fixation de la bobine HT.">Bobine HT</option>
+          <option value="5|6|Allen 4|M5×80 ×2|Vis de fixation du stator d'allumage.">Stator allumage</option>
+          <option value="20|26|Hex.17|M10×100 ×1|Écrou de fixation du rotor d'allumage.">Rotor allumage</option>
+          <option value="6|8|Allen 5|M6×100 ×3|Vis du couvercle Bendix.">Couvercle Bendix</option>
+          <option value="6|8|Allen 5|M6×100 ×4|Vis de support du Bendix.">Support Bendix</option>
+          <option value="8|10|Allen 5|M6×100 ×4|Vis de fixation du support de démarreur.">Support démarreur</option>
+          <option value="8|10|Allen 5|M6×100 ×3|Vis de fixation du couvercle d'embrayage.">Couvercle embrayage</option>
+          <option value="30|40|Hex.17|M10×100 ×1|Écrou de fixation de la cloche d'embrayage.">Cloche embrayage</option>
+          <option value="100|110|Hex.27|M20×100 ×1|Écrou couronne de démarreur (PAS À GAUCHE).">Couronne démarreur (écrou)</option>
+          <option value="6|8|Allen 3|M5×80 ×4|Vis du pignon moteur.">Pignon moteur (vis)</option>
+          <option value="10|12|Allen 5|M6×100 ×3|Vis de fixation de la couronne du démarreur.">Couronne démarreur (vis)</option>
+          <option value="8|10|Allen 5|M6×100 ×8|Vis de fixation des carters moteur.">Carters moteur</option>
+        </optgroup>
+        <optgroup label="Châssis">
+          <option value="18|22|Clé 13|M8|4 écrous M8 par roue.">Écrous de roue M8</option>
+          <option value="25|30|Clé 15|M10|4 écrous M10 par roue (compétition).">Écrous de roue M10</option>
+          <option value="25|30|Allen 6|—|Vis fixation moyeux sur axe AR.">Vis moyeux AR</option>
+          <option value="35|45|Clé 19|—|Écrou axe de fusée (frein-filet).">Axe de fusée</option>
+        </optgroup>
+      </select>
+      <div class="diag" id="torque_result" style="margin-top:10px;display:none"></div>
+    </div>
+
+    <div class="section">
+      <h2 class="collapsible" onclick="toggleSection(this)">Check pré-session</h2>
+      <div class="collapsible-body">
+        <div id="check_pre"></div>
+        <button class="btn2" type="button" onclick="resetChecks('pre')" style="margin-top:8px">Tout décocher</button>
+      </div>
+    </div>
+    <div class="section">
+      <h2 class="collapsible" onclick="toggleSection(this)">Check post-session</h2>
+      <div class="collapsible-body">
+        <div id="check_post"></div>
+        <button class="btn2" type="button" onclick="resetChecks('post')" style="margin-top:8px">Tout décocher</button>
+      </div>
+    </div>
+
+  </div><!-- /view-tools -->
+
+</div>
+
+<div class="sticky">
+  <div class="actions">
+    <button class="btn2" type="button" data-action="save" onclick="saveRun()">Sauver</button>
+    <button class="btn1" type="button" onclick="generateCSV()">CSV</button>
+    <button class="btn3" type="button" onclick="copyCSV()">Copier</button>
+    <button class="btn1" type="button" onclick="exportPDF()" style="background:#7c3aed">PDF</button>
+    <button class="btn5" type="button" onclick="newRun()">Run+</button>
+    <button class="btn4" type="button" onclick="resetForm()">Reset</button>
+  </div>
+</div>
+
+<script>
+/* ===== CONSTANTES ===== */
+const STORAGE_FORM = "fiche_karting_v10_form";
+const STORAGE_RUNS = "fiche_karting_v10_runs";
+const VERSION = "v10";
+
+const CIRCUITS_GPS = {
+  "Aigues-Vives": {lat:43.0075, lon:1.8836, label:"Le Kart'Are - Aigues-Vives (09)"},
+  "Alès":         {lat:44.1520, lon:4.0701, label:"Pôle Mécanique - Alès (30)"},
+  "Belmont":      {lat:43.8253, lon:2.7475, label:"Karting Plus - Belmont-sur-Rance (12)"},
+  "Berdery":      {lat:43.3625, lon:-0.4463, label:"Circuit Berdery - Lescar/Pau (64)"},
+  "Ganges":       {lat:43.9350, lon:3.7080, label:"Karting de Ganges (34)"},
+  "Layrac":       {lat:44.1227, lon:0.6489, label:"LF Karting - Layrac (47)"},
+  "Le Mans":      {lat:47.9550, lon:0.2080, label:"Karting International - Le Mans (72)"},
+  "Muret":        {lat:43.4630, lon:1.3340, label:"Karting de Muret (31)"},
+  "Valence":      {lat:45.0135, lon:4.8454, label:"Driv'kart - La Roche-de-Glun / Valence (26)"}
+};
+
+const CHECK_PRE = [
+  "Bougie : état + serrage",
+  "Niveau essence + huile (mélange 5%)",
+  "Pression pneus à froid",
+  "Voie AV / AR mesurée",
+  "Couple roues (M8 : 18-22 Nm, M10 : 25-30 Nm)",
+  "Chaîne : tension + lubrification",
+  "Pignon / couronne : usure + serrage",
+  "Câble accélérateur + course",
+  "Câble starter",
+  "Cale-pieds + plancher : fissures",
+  "Bouchon réservoir bien fermé",
+  "Sangles siège + écrous siège",
+  "Niveau pile : Mychron / Alfano",
+  "Capteur RPM + EGT branchés",
+  "Numéro de course visible"
+];
+const CHECK_POST = [
+  "Bougie : couleur (cible noisette)",
+  "Pression pneus à chaud (Δ noté sur fiche)",
+  "Température sur fiche : EGT, CHT, piste",
+  "Inspection visuelle châssis (fissures, usure)",
+  "Étanchéité moteur (joint embase, échappement)",
+  "Niveau d'huile dans la chambre carter",
+  "Chaîne : tension après séance",
+  "Vidanger eau du flexible si pluie",
+  "Couper coupe-circuit + fermer essence",
+  "Sauvegarder données chrono (Alfano)"
+];
+
+const HIST_TRANSMISSIONS = [
+  ["Muret","chronos","11×72",72/11],
+  ["Muret","finale","11×73",73/11],
+  ["Muret","Delfau","11×72",72/11],
+  ["Muret","Bathedou","11×68",68/11],
+  ["Muret","Jaja","11×74",74/11],
+  ["Alès","selon pilotes","10×68",6.8],
+  ["Alès","piste 25°C","10×69",6.9],
+  ["Alès","piste 35°C","10×71",7.1],
+  ["Alès","piste 45°C","10×72",7.2],
+  ["Belmont","base","10×70",7],
+  ["Belmont","base","11×76",76/11],
+  ["Belmont","Hugo","11×77",7],
+  ["Layrac","base","11×73",73/11],
+  ["Aigues-Vives","base","11×73",73/11],
+  ["Ganges","base","11×75",75/11],
+  ["Ganges","finale","11×76",76/11],
+  ["Valence","base","11×72",72/11],
+  ["Le Mans","base","11×67",67/11]
+];
+
+/* ===== IDs FORM ===== */
+const FORM_IDS = [
+  "circuit","session","date","heure","pilote","grip",
+  "piste_etat","temp_piste","pneu_type","jante_type",
+  "rpm_max","rpm_sortie","speed_max","speed_min","cht","egt_bas","egt_haut",
+  "cible_haut_min","cible_haut_max","cible_bas_min","cible_bas_max",
+  "entree","milieu","sortie","freinage",
+  "probleme","action_testee",
+  "hauteur_fusee","chasse_carr","pincement","voie_av","voie_ar","barre_av","moyeux","axe_h","axe_l","axe_bride","parechoc","type_chaine","raidisseur","rapport",
+  "siege_pos","siege_h","lest_kg","lest_rep",
+  "all_froid","all_chaud","avg_f","avd_f","arg_f","ard_f","avg_c","avd_c","arg_c","ard_c",
+  "vis_l","vis_h","bougie",
+  "commentaires"
+];
+const LAP_IDS = [];
+for(let i=1;i<=10;i++){ for(let p=1;p<=4;p++){ LAP_IDS.push(`lap_${i}_${p}`); } }
+const ALL_IDS = [...FORM_IDS, ...LAP_IDS];
+
+/* ===== UTILS ===== */
+function v(id){const el=document.getElementById(id);return el?(el.value||""):""}
+function setv(id,val){const el=document.getElementById(id);if(el)el.value=val??""}
+function num(s){const n=parseFloat(String(s).replace(",","."));return isNaN(n)?null:n}
+function fmt(n,d=2){return n==null?"—":Number(n).toLocaleString("fr-FR",{maximumFractionDigits:d,minimumFractionDigits:d})}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
+function setText(id,t){const el=document.getElementById(id);if(el)el.textContent=t}
+
+/* ===== TABS ===== */
+function switchView(name){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  const view = document.getElementById("view-"+name);
+  if(view) view.classList.add("active");
+  const tab = document.querySelector(`.tab[data-view="${name}"]`);
+  if(tab) tab.classList.add("active");
+  if(name==="history") renderHistory();
+  if(name==="compare") renderCompare();
+  if(name==="tools"){ calcDem(); renderHistTrans(); }
+  window.scrollTo(0,0);
+}
+function toggleSection(el){ el.classList.toggle("collapsed"); }
+
+/* ===== LAPS ===== */
+function buildLaps(){
+  let html="";
+  for(let i=1;i<=10;i++){
+    html += `<div class="lap-row">
+      <div class="lap-num">${i}</div>
+      <input id="lap_${i}_1" inputmode="decimal" placeholder="Tour" oninput="updateLapStats();saveForm()">
+      <input id="lap_${i}_2" inputmode="decimal" placeholder="P1" oninput="saveForm()">
+      <input id="lap_${i}_3" inputmode="decimal" placeholder="P2" class="partial-extra" oninput="saveForm()">
+      <input id="lap_${i}_4" inputmode="decimal" placeholder="P3" class="partial-extra" oninput="saveForm()">
+    </div>`;
+  }
+  document.getElementById("laps_container").innerHTML = html;
+}
+function parseLap(s){
+  if(!s) return null;
+  s = String(s).trim().replace(",", ".");
+  if(s.includes(":")){
+    const p = s.split(":");
+    return (parseInt(p[0])||0)*60 + (parseFloat(p[1])||0);
+  }
+  const n = parseFloat(s);
+  return isNaN(n)?null:n;
+}
+function fmtLap(t){
+  if(t==null) return "—";
+  if(t>=60){
+    const m=Math.floor(t/60), s=t-m*60;
+    return `${m}:${s.toFixed(3).padStart(6,"0")}`;
+  }
+  return t.toFixed(3);
+}
+function updateLapStats(){
+  const laps=[];
+  for(let i=1;i<=10;i++){
+    const t = parseLap(v(`lap_${i}_1`));
+    if(t!=null && t>0) laps.push(t);
+  }
+  if(!laps.length){
+    setText("best_lap","—"); setText("avg_lap","—"); setText("std_lap","—");
+    return;
+  }
+  const best = Math.min(...laps);
+  const avg = laps.reduce((a,b)=>a+b,0)/laps.length;
+  const std = Math.sqrt(laps.reduce((a,b)=>a+(b-avg)**2,0)/laps.length);
+  setText("best_lap",fmtLap(best));
+  setText("avg_lap",fmtLap(avg));
+  setText("std_lap",std<1?std.toFixed(3)+" s":(std.toFixed(2)+" s ⚠️"));
+}
+
+/* ===== STORAGE ===== */
+function saveForm(){
+  const d = {};
+  ALL_IDS.forEach(id => d[id]=v(id));
+  d.weather = window._weather || null;
+  try{ localStorage.setItem(STORAGE_FORM, JSON.stringify(d)); }catch(e){}
+}
+function loadForm(){
+  const raw = localStorage.getItem(STORAGE_FORM);
+  if(!raw) return;
+  try{
+    const d = JSON.parse(raw);
+    ALL_IDS.forEach(id => { if(d[id]!==undefined) setv(id,d[id]); });
+    if(d.weather){ window._weather = d.weather; renderWeather(); }
+  }catch(e){console.warn(e)}
+}
+function getRuns(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_RUNS)||"[]"); }catch(e){return []}
+}
+function setRuns(arr){ localStorage.setItem(STORAGE_RUNS, JSON.stringify(arr)); updateHistCount(); }
+function updateHistCount(){
+  const n = getRuns().length;
+  setText("hist-count", n?`(${n})`:"");
+}
+function saveRun(){
+  const isUpdate = !!window._currentRunId;
+  const runs = getRuns();
+  let d;
+  if(isUpdate){
+    // Mise à jour du run existant
+    const idx = runs.findIndex(r=>r.id===window._currentRunId);
+    if(idx<0){ window._currentRunId=null; return saveRun(); } // safety : run plus là
+    d = {...runs[idx]};
+    d.updatedAt = new Date().toISOString();
+  } else {
+    // Nouveau run
+    d = {id: uid(), version: VERSION, savedAt: new Date().toISOString()};
+  }
+  ALL_IDS.forEach(id => d[id]=v(id));
+  d.weather = window._weather || null;
+  d.cause = document.getElementById("cause").textContent;
+  d.action = document.getElementById("action").textContent;
+  d.best_lap = document.getElementById("best_lap").textContent;
+  d.avg_lap = document.getElementById("avg_lap").textContent;
+  d.std_lap = document.getElementById("std_lap").textContent;
+  if(isUpdate){
+    const idx = runs.findIndex(r=>r.id===window._currentRunId);
+    runs[idx] = d;
+    setRuns(runs);
+    alert(`Run mis à jour. Total inchangé : ${runs.length}`);
+  } else {
+    runs.unshift(d);
+    setRuns(runs);
+    window._currentRunId = d.id; // on entre maintenant en mode édition
+    updateSaveButtonLabel();
+    alert(`Run sauvé. Total : ${runs.length}`);
+  }
+}
+
+function saveAsNew(){
+  // Force la création d'un nouveau run même si on était en édition
+  window._currentRunId = null;
+  saveRun();
+}
+
+function updateSaveButtonLabel(){
+  const btn = document.querySelector('[data-action="save"]');
+  const banner = document.getElementById("edit_banner");
+  if(window._currentRunId){
+    if(btn) btn.textContent = "MAJ";
+    if(banner) banner.style.display="flex";
+  } else {
+    if(btn) btn.textContent = "Sauver";
+    if(banner) banner.style.display="none";
+  }
+}
+
+function exitEditMode(){
+  window._currentRunId = null;
+  updateSaveButtonLabel();
+}
+
+/* ===== FORM ACTIONS ===== */
+function clearField(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(el.tagName==="SELECT") el.selectedIndex = 0;
+  else el.value = "";
+}
+function resetForm(){
+  if(!confirm("Tout réinitialiser ? (le formulaire en cours, pas l'historique)")) return;
+  ALL_IDS.forEach(clearField);
+  setv("csv_output","");
+  setText("cause",""); setText("action","");
+  document.getElementById("weather_box").style.display="none";
+  document.getElementById("carb_analysis").style.display="none";
+  document.getElementById("alfano_result").innerHTML="";
+  window._weather=null;
+  window._currentRunId=null;
+  updateSaveButtonLabel();
+  try{ localStorage.removeItem(STORAGE_FORM); }catch(e){}
+  document.getElementById("circuit").focus();
+  updateLapStats();
+  updatePressureDelta();
+}
+function newRun(){
+  const keep = new Set([
+    "circuit","pilote","grip","temp_piste","date","piste_etat","pneu_type","jante_type",
+    "cible_haut_min","cible_haut_max","cible_bas_min","cible_bas_max",
+    "avg_f","avd_f","arg_f","ard_f",
+    "rapport","voie_av","voie_ar","barre_av","moyeux","axe_h","axe_l","axe_bride","parechoc","type_chaine","raidisseur","hauteur_fusee","chasse_carr","pincement",
+    "siege_pos","siege_h","lest_kg","lest_rep",
+    "vis_l","vis_h","bougie"
+  ]);
+  ALL_IDS.forEach(id => { if(!keep.has(id)) clearField(id); });
+  setv("csv_output","");
+  setText("cause",""); setText("action","");
+  document.getElementById("alfano_result").innerHTML="";
+  window._currentRunId=null; // nouveau run = on sort de l'édition
+  updateSaveButtonLabel();
+  document.getElementById("session").focus();
+  updateLapStats();
+  updatePressureDelta();
+  saveForm();
+}
+function applyAllPressures(mode){
+  if(mode==="froid"){
+    const val = v("all_froid");
+    ["avg_f","avd_f","arg_f","ard_f"].forEach(id => setv(id,val));
+  } else {
+    const val = v("all_chaud");
+    ["avg_c","avd_c","arg_c","ard_c"].forEach(id => setv(id,val));
+  }
+  updatePressureDelta();
+  saveForm();
+}
+function updatePressureDelta(){
+  const pairs = [["avg","d_avg"],["avd","d_avd"],["arg","d_arg"],["ard","d_ard"]];
+  let warn = "";
+  let deltas = [];
+  pairs.forEach(([k,target])=>{
+    const f = num(v(k+"_f"));
+    const c = num(v(k+"_c"));
+    const el = document.getElementById(target);
+    if(!el) return;
+    if(f!=null && c!=null){
+      const d = c-f;
+      deltas.push(d);
+      const sign = d>0?"+":"";
+      el.textContent = `${sign}${d.toFixed(2)}`;
+      // Seuils KA100 : OK 0.10-0.30 bar, orange 0.30-0.40, rouge >0.40, bleu si baisse
+      el.className = "delta";
+      if(d > 0.40) el.classList.add("bad");
+      else if(d > 0.30) el.classList.add("up");
+      else if(d >= 0) el.classList.add("ok");
+      else el.classList.add("down");
+    } else {
+      el.textContent = "—";
+      el.className = "delta";
+    }
+  });
+  if(deltas.length===4){
+    const max = Math.max(...deltas);
+    const min = Math.min(...deltas);
+    const moy = deltas.reduce((a,b)=>a+b,0)/4;
+    let msgs = [];
+    if(moy<0.10) msgs.push('<span class="pill pill-info">Pneus pas montés en pression — temp piste froide ou pression départ trop haute</span>');
+    else if(moy<=0.30) msgs.push('<span class="pill pill-ok">Montée moyenne saine ('+moy.toFixed(2)+' bar)</span>');
+    else if(moy<=0.40) msgs.push('<span class="pill pill-warn">Montée forte ('+moy.toFixed(2)+' bar) — pression départ peut-être trop basse</span>');
+    else msgs.push('<span class="pill pill-bad">Surchauffe pneus ('+moy.toFixed(2)+' bar) — abaisser pression départ</span>');
+    if(max-min>0.15) msgs.push('<span class="pill pill-warn">Δ hétérogène entre roues — équilibre châssis à vérifier</span>');
+    warn = msgs.join(" ");
+  }
+  const wEl = document.getElementById("pressure_warn");
+  if(wEl) wEl.innerHTML = warn;
+}
+
+/* ===== DIAG ===== */
+function updateDiag(){
+  let p = v("probleme");
+  const rpmMax = num(v("rpm_max"));
+  const sortie = v("sortie");
+  const entree = v("entree");
+  const freinage = v("freinage");
+  if(!p){
+    if(rpmMax!=null && rpmMax<14800) p="RPM trop bas";
+    else if(rpmMax!=null && rpmMax>15300) p="RPM trop haut";
+    else if(sortie==="Glisse") p="Sortie glisse";
+    else if(sortie==="Molle") p="Sortie molle";
+    else if(entree==="Pousse") p="Ne tourne pas";
+    else if(entree==="Trop agressif") p="Survirage";
+    else if(freinage==="Instable") p="Freinage instable";
+  }
+  const map = {
+    "Sortie glisse":["Traction faible / trop d'avant","AR +5 mm ou calmer l'avant"],
+    "Sortie molle":["Rapport long / relance faible","+ dents couronne"],
+    "Ne tourne pas":["Manque d'avant / arrière trop calme","Resserrer AR ou garder barre carbone"],
+    "Survirage":["Avant trop agressif","AR +5 mm ou chasse -1"],
+    "Freinage instable":["Répartition / transfert / avant chargé","Vérifier siège et équilibre au freinage"],
+    "RPM trop bas":["Rapport trop long","+ dents couronne (ou - dents pignon)"],
+    "RPM trop haut":["Rapport trop court","- dents couronne (ou + dents pignon)"]
+  };
+  setText("cause", map[p]?map[p][0]:"");
+  setText("action", map[p]?map[p][1]:"");
+}
+
+/* ===== CIBLES EGT ===== */
+const CIBLES_DEFAULT = {haut_min:620, haut_max:680, bas_min:380, bas_max:440};
+function getCibles(){
+  return {
+    haut_min: num(v("cible_haut_min")) ?? CIBLES_DEFAULT.haut_min,
+    haut_max: num(v("cible_haut_max")) ?? CIBLES_DEFAULT.haut_max,
+    bas_min:  num(v("cible_bas_min"))  ?? CIBLES_DEFAULT.bas_min,
+    bas_max:  num(v("cible_bas_max"))  ?? CIBLES_DEFAULT.bas_max
+  };
+}
+function resetCibles(){
+  setv("cible_haut_min", CIBLES_DEFAULT.haut_min);
+  setv("cible_haut_max", CIBLES_DEFAULT.haut_max);
+  setv("cible_bas_min",  CIBLES_DEFAULT.bas_min);
+  setv("cible_bas_max",  CIBLES_DEFAULT.bas_max);
+  saveForm();
+  updateCarbAnalysis();
+}
+
+/* ===== CARBURATION (EGT bas + EGT haut + CHT) ===== */
+function updateCarbAnalysis(){
+  const eb = num(v("egt_bas"));
+  const eh = num(v("egt_haut"));
+  const cht = num(v("cht"));
+  const hasEb = eb!=null && eb>100;
+  const hasEh = eh!=null && eh>100;
+  const hasC  = cht!=null && cht>50;
+  const box = document.getElementById("carb_analysis");
+  const hint = document.getElementById("carb_hint");
+  if(!hasEb && !hasEh && !hasC){ box.style.display="none"; if(hint) hint.style.display=""; return; }
+  if(hint) hint.style.display="none";
+  box.style.display="block";
+
+  const c = getCibles();
+  const blocks = [];
+  let worst = "ok"; // ok < warn < bad
+  const upgrade = (lvl) => { if(lvl==="bad" || (lvl==="warn" && worst==="ok")) worst = lvl; };
+
+  // Vis H — EGT haut régime
+  if(hasEh){
+    let lvl="ok", status="", action="";
+    if(eh < c.haut_min - 50){ lvl="warn"; status="🔧 Vis H · Très riche"; action="Fermer H de 1/8 de tour"; }
+    else if(eh < c.haut_min){ lvl="warn"; status="🔧 Vis H · Riche"; action="Fermer H de 1/30 (« 2 minutes »)"; }
+    else if(eh <= c.haut_max){ lvl="ok"; status="🔧 Vis H · ✓ Zone optimale"; action="Ne rien changer"; }
+    else if(eh <= c.haut_max + 20){ lvl="warn"; status="🔧 Vis H · Limite haute"; action="Ouvrir H de 1/30 si ça monte"; }
+    else if(eh <= c.haut_max + 50){ lvl="bad"; status="🔧 Vis H · ⚠️ Pauvre — risque serrage"; action="Ouvrir H de 1/16 à 1/8 IMMÉDIATEMENT"; }
+    else { lvl="bad"; status="🔧 Vis H · 🚨 DANGER"; action="STOP. Enrichir 1/4 de tour mini"; }
+    upgrade(lvl);
+    blocks.push({lvl, html:`<div style="margin:6px 0;padding:8px;background:#0b1220;border-radius:8px"><strong>${status}</strong> <span style="float:right;color:var(--muted)">${eh}°C / cible ${c.haut_min}–${c.haut_max}</span><br>${action}</div>`});
+  }
+
+  // Vis L — EGT bas régime
+  if(hasEb){
+    let lvl="ok", status="", action="";
+    if(eb < c.bas_min - 30){ lvl="warn"; status="🔧 Vis L · Très riche"; action="Fermer L de 1/8 de tour"; }
+    else if(eb < c.bas_min){ lvl="warn"; status="🔧 Vis L · Riche"; action="Fermer L de 1/30"; }
+    else if(eb <= c.bas_max){ lvl="ok"; status="🔧 Vis L · ✓ Zone optimale"; action="Ne rien changer"; }
+    else if(eb <= c.bas_max + 20){ lvl="warn"; status="🔧 Vis L · Pauvre"; action="Ouvrir L de 1/30"; }
+    else { lvl="bad"; status="🔧 Vis L · ⚠️ Trop pauvre"; action="Ouvrir L de 1/16"; }
+    upgrade(lvl);
+    blocks.push({lvl, html:`<div style="margin:6px 0;padding:8px;background:#0b1220;border-radius:8px"><strong>${status}</strong> <span style="float:right;color:var(--muted)">${eb}°C / cible ${c.bas_min}–${c.bas_max}</span><br>${action}</div>`});
+  }
+
+  // CHT — sécurité
+  if(hasC){
+    let lvl="ok", status="", action="";
+    if(cht < 100){ lvl="ok"; status="🌡️ CHT · Froid"; action="Moteur pas encore chaud, attendre."; }
+    else if(cht <= 200){ lvl="ok"; status="🌡️ CHT · ✓ Zone normale"; action="Aucune action."; }
+    else if(cht <= 220){ lvl="warn"; status="🌡️ CHT · Limite haute"; action="Vérifier circulation d'air, mélange."; }
+    else { lvl="bad"; status="🌡️ CHT · 🚨 Critique"; action="Risque détonation. Enrichir + vérifier flux d'air."; }
+    upgrade(lvl);
+    blocks.push({lvl, html:`<div style="margin:6px 0;padding:8px;background:#0b1220;border-radius:8px"><strong>${status}</strong> <span style="float:right;color:var(--muted)">${cht}°C / zone 140–200</span><br>${action}</div>`});
+  }
+
+  box.className = "alert alert-"+worst;
+  box.innerHTML = blocks.map(b=>b.html).join("");
+}
+
+/* ===== MÉTÉO ===== */
+async function fetchWeather(){
+  const circuit = v("circuit");
+  const date = v("date");
+  const heure = v("heure") || "14:00";
+  const gps = CIRCUITS_GPS[circuit];
+  const box = document.getElementById("weather_box");
+  if(!gps){ box.style.display="block"; box.innerHTML='<span class="pill pill-warn">⚠️ Sélectionne un circuit connu pour la météo auto.</span>'; return; }
+  if(!date){ box.style.display="block"; box.innerHTML='<span class="pill pill-warn">⚠️ Renseigne la date.</span>'; return; }
+  box.style.display="block";
+  box.innerHTML='<span class="pill pill-info">⏳ Récupération météo...</span>';
+  try{
+    const today = new Date(); today.setHours(0,0,0,0);
+    const target = new Date(date+"T00:00:00");
+    const isPast = target < today;
+    let base;
+    if(isPast){
+      base = `https://archive-api.open-meteo.com/v1/archive?latitude=${gps.lat}&longitude=${gps.lon}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,wind_speed_10m,wind_direction_10m,pressure_msl,surface_pressure&timezone=Europe%2FParis`;
+    } else {
+      base = `https://api.open-meteo.com/v1/forecast?latitude=${gps.lat}&longitude=${gps.lon}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation,wind_speed_10m,wind_direction_10m,pressure_msl,surface_pressure&timezone=Europe%2FParis`;
+    }
+    const r = await fetch(base);
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j = await r.json();
+    const hh = parseInt(heure.split(":")[0]) || 14;
+    const idx = j.hourly.time.findIndex(t => t.endsWith(String(hh).padStart(2,"0")+":00"));
+    const i = idx>=0?idx:Math.min(14,j.hourly.time.length-1);
+    const w = {
+      circuit, label: gps.label,
+      date, heure,
+      temp: j.hourly.temperature_2m[i],
+      hum: j.hourly.relative_humidity_2m[i],
+      dew: j.hourly.dew_point_2m[i],
+      precip: j.hourly.precipitation[i],
+      wind: j.hourly.wind_speed_10m[i],
+      windDir: j.hourly.wind_direction_10m[i],
+      pres: j.hourly.pressure_msl[i],
+      presSurf: j.hourly.surface_pressure[i]
+    };
+    // Densité air ρ = (P - 0.378·e) / (Rs·T)
+    const T = w.temp+273.15;
+    const e_sat = 6.1078 * Math.pow(10, 7.5*w.temp/(237.3+w.temp));
+    const e = e_sat * (w.hum/100);
+    const Ps = w.presSurf || w.pres;
+    w.density = (Ps*100 - 0.378*e*100) / (287.05 * T);
+    w.densityRatio = w.density / 1.225;
+    window._weather = w;
+    renderWeather();
+    saveForm();
+  }catch(e){
+    box.innerHTML=`<span class="pill pill-bad">❌ Erreur : ${e.message}</span><br><span class="small">Réessaie ou vérifie ta connexion.</span>`;
+  }
+}
+
+function renderWeather(){
+  const w = window._weather;
+  const box = document.getElementById("weather_box");
+  if(!w){ box.style.display="none"; return; }
+  box.style.display="block";
+  const dirs = ["N","NE","E","SE","S","SO","O","NO"];
+  const arrow = dirs[Math.round(w.windDir/45)%8];
+  let densityNote = "";
+  if(w.densityRatio<0.97) densityNote = '<span class="pill pill-warn">Air léger — −'+Math.round((1-w.densityRatio)*100)+'% puissance moteur</span>';
+  else if(w.densityRatio>1.03) densityNote = '<span class="pill pill-ok">Air dense — +'+Math.round((w.densityRatio-1)*100)+'% gain potentiel</span>';
+  else densityNote = '<span class="pill pill-info">Densité standard</span>';
+  if(!v("temp_piste") && w.temp!=null){
+    const estPiste = Math.round(w.temp + (w.precip>0?2:8));
+    setv("temp_piste", String(estPiste));
+  }
+  box.innerHTML = `
+    <div style="font-weight:700;font-size:14px">🌤 ${w.label}<br><span style="font-weight:400;color:var(--muted);font-size:12px">${w.date} à ${w.heure}</span></div>
+    <div class="weather-row">
+      <span class="chip">🌡 ${w.temp.toFixed(1)}°C air</span>
+      <span class="chip">💧 ${Math.round(w.hum)}% HR</span>
+      <span class="chip">🌫 ${w.dew.toFixed(1)}°C dew</span>
+      <span class="chip">💨 ${w.wind.toFixed(0)} km/h ${arrow}</span>
+      <span class="chip">📉 ${Math.round(w.pres)} hPa</span>
+      <span class="chip">${w.precip>0?"☔ "+w.precip.toFixed(1)+" mm":"☀ sec"}</span>
+    </div>
+    <div style="margin-top:8px">
+      <span class="chip">ρ = ${w.density.toFixed(3)} kg/m³ (${(w.densityRatio*100).toFixed(1)}% std)</span>
+      ${densityNote}
+    </div>
+    <div class="hint" style="margin-top:6px">Source : Open-Meteo · Temp piste auto-estimée si vide.</div>
+  `;
+}
+
+function resolveConflict(idx, action){
+  if(!window._conflicts || !window._conflicts[idx]) return;
+  const c = window._conflicts[idx];
+  if(c._resolved) return; // déjà résolu, ignorer double-clic
+  if(action==="replace"){
+    setv(c.fieldId, c.newValue);
+  }
+  c._resolved = true;
+  // Cibler le bloc par son data-conflict-idx (pas par position dans le DOM)
+  const result = document.getElementById("alfano_result");
+  const block = result.querySelector(`.conflict-block[data-conflict-idx="${idx}"]`);
+  if(block){
+    block.style.transition = "opacity .2s";
+    block.style.opacity = "0";
+    setTimeout(() => {
+      block.remove();
+      const remaining = window._conflicts.filter(x => !x._resolved);
+      if(remaining.length === 0){
+        const warnBox = result.querySelector('.alert-warn');
+        if(warnBox) warnBox.remove();
+      } else {
+        const titleSpan = result.querySelector('.conflict-title');
+        if(titleSpan) titleSpan.textContent = `⚠️ ${remaining.length} conflit(s) restant(s) :`;
+      }
+    }, 220);
+  }
+  saveForm();
+  updateLapStats();
+  updateCarbAnalysis();
+}
+
+/* ===== ALFANO 6 IMPORT =====
+   Format Alfano 6 :
+   - SN11101_*.csv : fichier session avec stats par tour (RPM, EGT, partiels en ms)
+       Ligne 1 : meta (date, heure, S/N, circuit, pilote, poids, etc.)
+       Ligne 2 : header (lap, time lap, partiels, Min/Max RPM, Min/Max T1..T4, max EGT, etc.)
+       Lignes 3+ : 1 ligne par tour
+   - LAP_X_*.csv : data haute fréquence pour le tour X (Partiel,RPM,Speed GPS,T1,T2,Gf.X,Gf.Y,Orientation,...)
+   Multi-fichiers acceptés : on prend SN11101 si présent, sinon on aggrège les LAP_X.
+*/
+async function parseAlfano(ev){
+  const files = [...ev.target.files];
+  if(!files.length) return;
+  const result = document.getElementById("alfano_result");
+  result.innerHTML = '<span class="pill pill-info">⏳ Lecture...</span>';
+  try{
+    // Tri : SN d'abord (session), puis LAP_X par numéro
+    const sessionFile = files.find(f => /^SN\d+/.test(f.name) || (!/^LAP_/.test(f.name) && f.name.toLowerCase().endsWith(".csv") && !/^A\d|param|temps_moteur|info/i.test(f.name)));
+    const lapFiles = files.filter(f => /^LAP_(\d+)_/.test(f.name)).sort((a,b)=>{
+      const na = parseInt(a.name.match(/^LAP_(\d+)_/)[1]);
+      const nb = parseInt(b.name.match(/^LAP_(\d+)_/)[1]);
+      return na-nb;
+    });
+
+    let imported = {circuit:"", pilote:"", date:"", heure:"", laps:[],
+                    rpmMax:0, rpmMin:Infinity,
+                    egtMin:Infinity, egtMax:0,
+                    chtMax:0,
+                    speedMin:Infinity, speedMax:0};
+
+    // 1. Lire le fichier session si présent
+    if(sessionFile){
+      const text = await sessionFile.text();
+      const lines = text.split(/\r?\n/).filter(l=>l.trim());
+      if(lines.length>=3){
+        // Ligne 1 : meta
+        const meta = lines[0].split(",");
+        // ex: 25-04-2026,13:31,06,11101,CIRCUIT D ALES CEVENNE,HUGO,...
+        if(meta[0] && /^\d{2}-\d{2}-\d{4}$/.test(meta[0])){
+          const [d,m,y] = meta[0].split("-");
+          imported.date = `${y}-${m}-${d}`;
+        }
+        if(meta[1] && /^\d{1,2}:\d{2}/.test(meta[1])) imported.heure = meta[1].slice(0,5);
+        if(meta[4]) imported.circuit = meta[4].trim();
+        if(meta[5]) imported.pilote = meta[5].trim();
+
+        // Header (ligne 2) - cherche les colonnes
+        const header = lines[1].split(",").map(h=>h.trim().toLowerCase());
+        const findCol = (...keys) => {
+          for(const k of keys){
+            const i = header.findIndex(h=>h===k.toLowerCase() || h.includes(k.toLowerCase()));
+            if(i>=0) return i;
+          }
+          return -1;
+        };
+        const cLap = findCol("lap");
+        const cTime = findCol("time lap");
+        const cP1 = findCol("time partiel 1");
+        const cP2 = findCol("time partiel 2");
+        const cP3 = findCol("time partiel 3");
+        const cMinRpm = findCol("min rpm");
+        const cMaxRpm = findCol("max rpm");
+        const cMinT1 = findCol("min t1");
+        const cMaxT1 = findCol("max t1");
+        const cMinT2 = findCol("min t2");
+        const cMaxT2 = findCol("max t2");
+        const cMinSpeed = findCol("min speed gps","min speed");
+        const cMaxSpeed = findCol("max speed gps","max speed");
+        const cMaxEgt = findCol("max egt");
+        const cVbat = findCol("vbattery");
+
+        // Lignes 3+ : tours
+        for(let i=2;i<lines.length;i++){
+          const r = lines[i].split(",");
+          const lapN = parseInt(r[cLap]);
+          if(isNaN(lapN) || lapN<=0) continue;
+          const tms = parseFloat(r[cTime]);
+          if(isNaN(tms) || tms<10000) continue; // tour < 10s = aberrant
+          const lap = {n:lapN, t:tms/1000};
+          // Ne récupérer les partiels que s'ils sont distincts du temps total (sinon = pas de partiel utilisé)
+          const tSec = tms/1000;
+          if(cP1>=0){ const v=parseFloat(r[cP1]); if(!isNaN(v)&&v>0&&Math.abs(v/1000-tSec)>0.05) lap.p1 = v/1000; }
+          if(cP2>=0){ const v=parseFloat(r[cP2]); if(!isNaN(v)&&v>0&&Math.abs(v/1000-tSec)>0.05) lap.p2 = v/1000; }
+          if(cP3>=0){ const v=parseFloat(r[cP3]); if(!isNaN(v)&&v>0&&Math.abs(v/1000-tSec)>0.05) lap.p3 = v/1000; }
+          imported.laps.push(lap);
+          if(cMaxRpm>=0){ const val=parseFloat(r[cMaxRpm]); if(!isNaN(val) && val>0 && val>imported.rpmMax) imported.rpmMax=val; }
+          if(cMinRpm>=0){ const val=parseFloat(r[cMinRpm]); if(!isNaN(val) && val>3000 && val<imported.rpmMin) imported.rpmMin=val; }
+          // T2 = EGT (×10) sur Alfano 6 KA100
+          if(cMaxT2>=0){ const v=parseFloat(r[cMaxT2]); if(!isNaN(v) && v>imported.egtMax) imported.egtMax=v; }
+          if(cMinT2>=0){ const v=parseFloat(r[cMinT2]); if(!isNaN(v) && v>500 && v<imported.egtMin) imported.egtMin=v; }
+          // T1 = eau / culasse (×10), souvent 0 sur KA100 air
+          if(cMaxT1>=0){ const v=parseFloat(r[cMaxT1]); if(!isNaN(v) && v>imported.chtMax) imported.chtMax=v; }
+          if(cMaxEgt>=0){ const v=parseFloat(r[cMaxEgt]); if(!isNaN(v) && v>imported.egtMax) imported.egtMax=v; }
+          if(cMaxSpeed>=0){ const v=parseFloat(r[cMaxSpeed]); if(!isNaN(v) && v>imported.speedMax) imported.speedMax=v; }
+          if(cMinSpeed>=0){ const v=parseFloat(r[cMinSpeed]); if(!isNaN(v) && v>50 && v<imported.speedMin) imported.speedMin=v; }
+        }
+      }
+    }
+
+    // 2. Compléter avec les fichiers LAP_X (data haute fréq)
+    // On utilise une médiane glissante de 3 points pour exclure les artefacts capteur
+    // (pics isolés à 17000 quand le capteur RPM décroche une fraction de seconde)
+    if(lapFiles.length){
+      // Reset des max moteur si on a accès aux LAP_X (plus fiables que SN)
+      let lapRpmMax = 0, lapRpmMin = Infinity;
+      let lapEgtMax = 0, lapEgtMin = Infinity;
+      let lapChtMax = 0;
+      let lapSpeedMax = 0, lapSpeedMin = Infinity;
+      for(const lf of lapFiles){
+        const text = await lf.text();
+        const lines = text.split(/\r?\n/).filter(l=>l.trim());
+        if(lines.length<4) continue;
+        const header = lines[0].split(",").map(h=>h.trim().toLowerCase());
+        const cRpm = header.findIndex(h=>h==="rpm");
+        const cT1 = header.findIndex(h=>h==="t1");
+        const cT2 = header.findIndex(h=>h==="t2");
+        const cSpeed = header.findIndex(h=>h.includes("speed gps")||h==="speed");
+        // RPM : médiane glissante de 3 pour exclure les artefacts capteur
+        const rpms = [];
+        for(let i=1;i<lines.length;i++){
+          const v = parseFloat(lines[i].split(",")[cRpm]);
+          if(!isNaN(v)) rpms.push(v);
+        }
+        for(let i=1;i<rpms.length-1;i++){
+          const sorted = [rpms[i-1],rpms[i],rpms[i+1]].sort((a,b)=>a-b);
+          const med = sorted[1];
+          if(med>0 && med<18000 && med>lapRpmMax) lapRpmMax = med;
+          if(med>3000 && med<lapRpmMin) lapRpmMin = med;
+        }
+        // T1 (CHT), T2 (EGT), Speed : on prend min et max bruts (capteurs lents, peu d'artefacts)
+        for(let i=1;i<lines.length;i++){
+          const r = lines[i].split(",");
+          if(cT2>=0){
+            const v=parseFloat(r[cT2]);
+            if(!isNaN(v)){
+              if(v>lapEgtMax) lapEgtMax=v;
+              if(v>500 && v<lapEgtMin) lapEgtMin=v; // ignore températures de démarrage
+            }
+          }
+          if(cT1>=0){ const v=parseFloat(r[cT1]); if(!isNaN(v) && v>lapChtMax) lapChtMax=v; }
+          if(cSpeed>=0){
+            const v=parseFloat(r[cSpeed]);
+            if(!isNaN(v)){
+              if(v>lapSpeedMax) lapSpeedMax=v;
+              if(v>50 && v<lapSpeedMin) lapSpeedMin=v; // ignore arrêts
+            }
+          }
+        }
+      }
+      if(lapRpmMax>0) imported.rpmMax = lapRpmMax;
+      if(lapRpmMin<Infinity) imported.rpmMin = lapRpmMin;
+      if(lapEgtMax>imported.egtMax) imported.egtMax = lapEgtMax;
+      if(lapEgtMin<imported.egtMin) imported.egtMin = lapEgtMin;
+      if(lapChtMax>imported.chtMax) imported.chtMax = lapChtMax;
+      if(lapSpeedMax>imported.speedMax) imported.speedMax = lapSpeedMax;
+      if(lapSpeedMin<imported.speedMin) imported.speedMin = lapSpeedMin;
+    }
+
+    // 3. Appliquer les valeurs aux champs avec gestion des conflits
+    const applied = [];
+    const conflicts = [];
+
+    // Helper : applique une valeur seulement si le champ est vide ou si la valeur est égale
+    // Sinon stocke le conflit pour résolution interactive
+    function applyOrConflict(fieldId, newValue, label){
+      const current = v(fieldId);
+      if(!current || String(current).trim()===""){
+        setv(fieldId, newValue);
+        applied.push(`${label} : ${newValue}`);
+        return;
+      }
+      if(String(current).trim() === String(newValue).trim()){
+        // identique, rien à faire
+        return;
+      }
+      conflicts.push({fieldId, current, newValue, label});
+    }
+
+    if(imported.circuit){
+      const map = {
+        "CIRCUIT D ALES CEVENNE":"Alès","ALES":"Alès",
+        "BELMONT":"Belmont","MURET":"Muret","GANGES":"Ganges",
+        "LAYRAC":"Layrac","AIGUES":"Aigues-Vives","LAVELANET":"Aigues-Vives",
+        "BERDERY":"Berdery","LESCAR":"Berdery",
+        "VALENCE":"Valence","ROCHE":"Valence","MANS":"Le Mans"
+      };
+      const found = Object.keys(map).find(k => imported.circuit.toUpperCase().includes(k));
+      if(found) applyOrConflict("circuit", map[found], "Circuit");
+    }
+    if(imported.pilote){
+      const p = imported.pilote.charAt(0).toUpperCase()+imported.pilote.slice(1).toLowerCase();
+      if(["Hugo","Jaouen","Louka"].includes(p)) applyOrConflict("pilote", p, "Pilote");
+    }
+    if(imported.date) applyOrConflict("date", imported.date, "Date");
+    if(imported.heure) applyOrConflict("heure", imported.heure, "Heure");
+    if(imported.rpmMax>0) applyOrConflict("rpm_max", String(Math.round(imported.rpmMax)), "RPM max");
+    if(imported.rpmMin>0 && imported.rpmMin<Infinity) applyOrConflict("rpm_sortie", String(Math.round(imported.rpmMin)), "RPM mini");
+    // EGT haut (Max T2) → vis H
+    if(imported.egtMax>0){
+      const egtH = imported.egtMax > 1000 ? Math.round(imported.egtMax/10) : Math.round(imported.egtMax);
+      applyOrConflict("egt_haut", String(egtH), "EGT haut (vis H)");
+    }
+    // EGT bas (Min T2) → vis L
+    if(imported.egtMin>0 && imported.egtMin<Infinity){
+      const egtL = imported.egtMin > 1000 ? Math.round(imported.egtMin/10) : Math.round(imported.egtMin);
+      applyOrConflict("egt_bas", String(egtL), "EGT bas (vis L)");
+    }
+    if(imported.chtMax>0){
+      const cht = imported.chtMax > 1000 ? Math.round(imported.chtMax/10) : Math.round(imported.chtMax);
+      if(cht>30) applyOrConflict("cht", String(cht), "CHT max (°C)");
+    }
+    // Vitesse Alfano = km/h × 10 (988 = 98.8 km/h)
+    if(imported.speedMax>0){
+      const sMax = imported.speedMax > 200 ? (imported.speedMax/10).toFixed(1) : imported.speedMax.toFixed(1);
+      applyOrConflict("speed_max", sMax, "Vitesse maxi (km/h)");
+    }
+    if(imported.speedMin>0 && imported.speedMin<Infinity){
+      const sMin = imported.speedMin > 200 ? (imported.speedMin/10).toFixed(1) : imported.speedMin.toFixed(1);
+      applyOrConflict("speed_min", sMin, "Vitesse mini (km/h)");
+    }
+    // Tours : toujours écrasés (l'Alfano est la source de vérité pour les chronos)
+    imported.laps.sort((a,b)=>a.n-b.n).slice(0,10).forEach((lt,i)=>{
+      setv(`lap_${i+1}_1`, lt.t.toFixed(3));
+      let line = `Tour ${i+1} : ${fmtLap(lt.t)}`;
+      if(lt.p1){ setv(`lap_${i+1}_2`, lt.p1.toFixed(3)); line += ` · P1 ${lt.p1.toFixed(3)}`; }
+      if(lt.p2){ setv(`lap_${i+1}_3`, lt.p2.toFixed(3)); line += ` · P2 ${lt.p2.toFixed(3)}`; }
+      if(lt.p3){ setv(`lap_${i+1}_4`, lt.p3.toFixed(3)); line += ` · P3 ${lt.p3.toFixed(3)}`; }
+      applied.push(line);
+    });
+
+    // Affichage du résultat avec gestion des conflits
+    let html = "";
+    if(applied.length){
+      html += `<div class="alert alert-ok"><strong>✓ Import Alfano 6 réussi</strong> (${imported.laps.length} tours)<br>${applied.join("<br>")}</div>`;
+    }
+    if(conflicts.length){
+      html += `<div class="alert alert-warn" style="margin-top:8px"><strong class="conflict-title">⚠️ ${conflicts.length} conflit(s) — à résoudre :</strong><br>`;
+      conflicts.forEach((c,i)=>{
+        html += `<div class="conflict-block" data-conflict-idx="${i}" style="margin:8px 0;padding:8px;background:#0b1220;border-radius:8px">
+          <div><strong>${c.label}</strong></div>
+          <div style="font-size:12px;color:var(--muted)">Actuel : <code>${c.current}</code></div>
+          <div style="font-size:12px;color:var(--muted)">Alfano : <code>${c.newValue}</code></div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button class="btn2" style="min-height:34px;padding:0 10px;font-size:12px" onclick="resolveConflict(${i},'keep')">Garder ${c.current}</button>
+            <button class="btn1" style="min-height:34px;padding:0 10px;font-size:12px" onclick="resolveConflict(${i},'replace')">Prendre ${c.newValue}</button>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+      window._conflicts = conflicts;
+    }
+    if(!applied.length && !conflicts.length){
+      html = `<div class="alert alert-warn">⚠️ Aucune donnée nouvelle à importer (tout est déjà identique).</div>`;
+    }
+    result.innerHTML = html;
+    updateLapStats();
+    updateCarbAnalysis();
+    saveForm();
+  }catch(e){
+    result.innerHTML = `<div class="alert alert-bad">❌ ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+/* ===== CSV ===== */
+function collectData(){
+  const d = {};
+  ALL_IDS.forEach(id => d[id]=v(id));
+  d.cause = document.getElementById("cause").textContent;
+  d.action_suggeree = document.getElementById("action").textContent;
+  d.best_lap = document.getElementById("best_lap").textContent;
+  d.avg_lap = document.getElementById("avg_lap").textContent;
+  d.std_lap = document.getElementById("std_lap").textContent;
+  if(window._weather){
+    d.weather_temp = window._weather.temp;
+    d.weather_hum = window._weather.hum;
+    d.weather_wind = window._weather.wind;
+    d.weather_pres = window._weather.pres;
+    d.weather_density = window._weather.density?.toFixed(4);
+  }
+  return d;
+}
+function generateCSV(){
+  const d = collectData();
+  const headers = Object.keys(d).join(";");
+  const values = Object.values(d).map(x => String(x??"").replace(/;/g,",").replace(/[\r\n]/g," ")).join(";");
+  setv("csv_output", headers+"\n"+values);
+}
+function copyCSV(){
+  generateCSV();
+  const ta = document.getElementById("csv_output");
+  ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+  let ok=false;
+  try{ ok=document.execCommand("copy"); }catch(e){}
+  if(!ok && navigator.clipboard){
+    navigator.clipboard.writeText(ta.value).then(()=>alert("CSV copié."),()=>alert("Copie impossible. Appui long → Copier."));
+  } else { alert("CSV copié."); }
+}
+
+function exportPDF(){
+  // S'assurer d'être sur l'onglet Fiche pour l'impression
+  switchView("fiche");
+  setTimeout(() => {
+    try {
+      window.print();
+    } catch(e) {
+      alert("Impression non disponible. Utilise Partager → Imprimer.");
+    }
+  }, 300);
+}
+
+/* ===== HISTORIQUE ===== */
+let _selected = new Set();
+function renderHistory(){
+  const list = document.getElementById("hist_list");
+  const q = (document.getElementById("hist_search").value||"").toLowerCase();
+  const runs = getRuns().filter(r=>{
+    if(!q) return true;
+    return [r.circuit,r.pilote,r.session,r.date,r.commentaires].some(x=>String(x||"").toLowerCase().includes(q));
+  });
+  if(!runs.length){ list.innerHTML='<p class="small">Aucun run sauvegardé.</p>'; return; }
+  list.innerHTML = runs.map(r=>{
+    const sel = _selected.has(r.id);
+    const date = r.date || "—";
+    const sess = r.session || "—";
+    const best = r.best_lap || "—";
+    const wTemp = r.weather && r.weather.temp!=null?` · ${r.weather.temp.toFixed(0)}°C`:"";
+    return `<div class="run-card ${sel?"selected":""}" onclick="toggleSelect('${r.id}')">
+      <div class="run-head">
+        <div>
+          <div class="run-title">${r.circuit||"?"} · ${r.pilote||"?"} · ${sess}</div>
+          <div class="run-meta">${date} ${r.heure||""} · meilleur ${best} · RPM ${r.rpm_max||"?"}${wTemp}</div>
+        </div>
+        <div>${sel?'<span class="pill pill-info">✓</span>':""}</div>
+      </div>
+      <div class="run-actions" onclick="event.stopPropagation()">
+        <button class="btn1" type="button" onclick="loadRun('${r.id}')">Ouvrir</button>
+        <button class="btn2" type="button" onclick="duplicateRun('${r.id}')">Dupliquer</button>
+        <button class="btn4" type="button" onclick="deleteRun('${r.id}')">Suppr.</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function toggleSelect(id){
+  if(_selected.has(id)) _selected.delete(id);
+  else {
+    if(_selected.size>=2){ _selected.clear(); }
+    _selected.add(id);
+  }
+  renderHistory();
+}
+function loadRun(id){
+  const r = getRuns().find(x=>x.id===id);
+  if(!r) return;
+  ALL_IDS.forEach(k => { if(r[k]!==undefined) setv(k,r[k]); });
+  if(r.weather){ window._weather=r.weather; renderWeather(); }
+  else { window._weather=null; document.getElementById("weather_box").style.display="none"; }
+  window._currentRunId = id;
+  updateSaveButtonLabel();
+  updateDiag(); updateLapStats(); updatePressureDelta(); updateCarbAnalysis();
+  saveForm();
+  switchView("fiche");
+}
+function duplicateRun(id){
+  const r = getRuns().find(x=>x.id===id);
+  if(!r) return;
+  loadRun(id);
+  // Sortir du mode édition pour que le prochain "Sauver" crée un nouveau run
+  window._currentRunId = null;
+  updateSaveButtonLabel();
+  ["session","heure","rpm_max","rpm_sortie","speed_max","speed_min","egt_bas","egt_haut","cht","action_testee"].forEach(clearField);
+  for(let i=1;i<=10;i++){ for(let p=1;p<=4;p++){ clearField(`lap_${i}_${p}`); } }
+  updateLapStats();
+  alert("Run dupliqué dans la fiche. Modifie ce qui change puis Sauver pour créer un nouveau run.");
+}
+function deleteRun(id){
+  if(!confirm("Supprimer ce run ?")) return;
+  setRuns(getRuns().filter(x=>x.id!==id));
+  _selected.delete(id);
+  renderHistory();
+}
+function exportJSON(){
+  const data = { version:VERSION, exported:new Date().toISOString(), runs:getRuns() };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `karting-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+async function importJSON(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!data.runs || !Array.isArray(data.runs)) throw new Error("Pas de champ 'runs' dans le JSON");
+
+    // Détecter le format : v9 a data:{} imbriqué + ts:..., v10 a champs à plat + id:...
+    const isV9 = data.runs.length > 0 && data.runs[0].data && typeof data.runs[0].data === "object";
+
+    let converted;
+    if(isV9){
+      // Mapping des champs renommés entre v9 et v10
+      const renamed = {
+        "axe_etat": "axe_bride",
+        "chasse": "chasse_carr",
+        "egt": "egt_haut"  // v9 avait une seule valeur EGT, c'est l'EGT haut régime
+      };
+      converted = data.runs.map((r, idx) => {
+        const flat = {};
+        const src = r.data || {};
+        Object.keys(src).forEach(k => {
+          // Renommage
+          let key = renamed[k] || k;
+          // Conversion lap_N (chronos v9) → lap_N_1 (tour partiel 0 v10)
+          if(/^lap_\d+$/.test(k)){
+            const n = k.split("_")[1];
+            key = `lap_${n}_1`;
+          }
+          flat[key] = src[k];
+        });
+        // Métadonnées de run
+        flat.id = `v9_${r.ts || idx}_${Math.random().toString(36).substr(2,5)}`;
+        flat.version = "v9-migrated";
+        flat.savedAt = r.ts ? new Date(r.ts).toISOString() : new Date().toISOString();
+        // best_lap : prendre le lap_1 (=premier tour saisi) si dispo, sinon laisser vide
+        if(flat.lap_1_1){
+          const t = parseLap(flat.lap_1_1);
+          if(t!=null) flat.best_lap = fmtLap(t);
+        }
+        return flat;
+      });
+    } else {
+      // Format v10 natif : on prend tel quel
+      converted = data.runs;
+    }
+
+    if(!confirm(`Importer ${converted.length} runs ${isV9?"(format v9 détecté, conversion auto)":"(format v10)"} ?\n(fusionne avec l'existant)`)) return;
+
+    const existing = getRuns();
+    const ids = new Set(existing.map(r=>r.id));
+    const merged = [...existing, ...converted.filter(r=>!ids.has(r.id))];
+    setRuns(merged);
+    renderHistory();
+    alert(`Import OK. Total : ${merged.length} runs.${isV9?"\n\n8 runs migrés depuis v9.":""}`);
+  }catch(e){
+    alert("Erreur : "+e.message);
+    console.error(e);
+  }
+  ev.target.value="";
+}
+
+/* ===== COMPARE ===== */
+function renderCompare(){
+  const tbl = document.getElementById("compare_table");
+  const empty = document.getElementById("compare-empty");
+  if(_selected.size!==2){
+    empty.style.display="block";
+    tbl.innerHTML="";
+    return;
+  }
+  empty.style.display="none";
+  const ids = [..._selected];
+  const runs = getRuns();
+  const r1 = runs.find(x=>x.id===ids[0]);
+  const r2 = runs.find(x=>x.id===ids[1]);
+  if(!r1||!r2){ tbl.innerHTML='<p class="small">Run introuvable.</p>'; return; }
+  const fields = [
+    ["circuit","Circuit"],["session","Session"],["date","Date"],["pilote","Pilote"],["grip","Grip"],
+    ["best_lap","Meilleur tour"],["avg_lap","Tour moyen"],["std_lap","Constance"],
+    ["rpm_max","RPM max"],["rpm_sortie","RPM mini"],
+    ["speed_max","Vit. max (km/h)"],["speed_min","Vit. min (km/h)"],
+    ["egt_haut","EGT haut (vis H)"],["egt_bas","EGT bas (vis L)"],["cht","CHT"],["temp_piste","T° piste"],
+    ["rapport","Rapport"],["voie_av","Voie AV"],["voie_ar","Voie AR"],["barre_av","Barre AV"],["axe_h","Axe AR h"],["axe_l","Axe AR l"],["axe_bride","Axe bridé"],
+    ["avg_f","P AVG froid"],["avd_f","P AVD froid"],["arg_f","P ARG froid"],["ard_f","P ARD froid"],
+    ["avg_c","P AVG chaud"],["avd_c","P AVD chaud"],["arg_c","P ARG chaud"],["ard_c","P ARD chaud"],
+    ["lest_kg","Lest"],["lest_rep","Rép. lest"],["siege_pos","Siège pos"],["siege_h","Siège h"],
+    ["vis_l","Vis L"],["vis_h","Vis H"],
+    ["entree","Entrée"],["milieu","Milieu"],["sortie","Sortie"],["freinage","Freinage"],
+    ["probleme","Problème"],["action_testee","Action testée"],["commentaires","Commentaires"]
+  ];
+  const t1 = parseLap((r1.lap_1_1||r1.best_lap||"").replace(/[^\d:.,]/g,""));
+  const t2 = parseLap((r2.lap_1_1||r2.best_lap||"").replace(/[^\d:.,]/g,""));
+  let betterId = null;
+  if(t1!=null && t2!=null && Math.abs(t1-t2)>0.01){
+    betterId = t1<t2?r1.id:r2.id;
+  }
+  const w1 = r1.weather||{}, w2 = r2.weather||{};
+  let html = `<table><thead><tr><th>Paramètre</th><th>${r1.circuit||"R1"} (${r1.date||""})</th><th>${r2.circuit||"R2"} (${r2.date||""})</th></tr></thead><tbody>`;
+  // Ajout météo en tête
+  if(w1.temp!=null || w2.temp!=null){
+    html += `<tr><td>Temp air</td><td>${w1.temp!=null?w1.temp.toFixed(1)+"°C":"—"}</td><td>${w2.temp!=null?w2.temp.toFixed(1)+"°C":"—"}</td></tr>`;
+    html += `<tr><td>Densité air</td><td>${w1.density!=null?w1.density.toFixed(3):"—"}</td><td>${w2.density!=null?w2.density.toFixed(3):"—"}</td></tr>`;
+  }
+  fields.forEach(([k,label])=>{
+    const v1 = r1[k]??"";
+    const v2 = r2[k]??"";
+    const diff = String(v1)!==String(v2) && v1!=="" && v2!=="";
+    let cls1="", cls2="";
+    if(k==="best_lap" && betterId){
+      if(betterId===r1.id) cls1="better-cell"; else cls2="better-cell";
+    } else if(diff){
+      cls1="diff-cell"; cls2="diff-cell";
+    }
+    html += `<tr><td>${label}</td><td class="${cls1}">${v1||"—"}</td><td class="${cls2}">${v2||"—"}</td></tr>`;
+  });
+  html += "</tbody></table>";
+  tbl.innerHTML = html;
+}
+
+/* ===== DEMULTIPLICATION ===== */
+function stepDem(id, step){
+  const el = document.getElementById(id);
+  if(!el) return;
+  let val = Number(el.value || 0) + step;
+  const mn = Number(el.min);
+  const mx = Number(el.max);
+  if(!isNaN(mn) && val < mn) val = mn;
+  if(!isNaN(mx) && val > mx) val = mx;
+  el.value = val;
+  calcDem();
+}
+
+function calcDem(){
+  const p = parseInt(v("dem_pinion"));
+  const c = parseInt(v("dem_sprocket"));
+  const rpm = parseInt(v("dem_rpm"));
+  const target = parseInt(v("dem_target"));
+  const cmin = parseInt(v("dem_cmin"));
+  const cmax = parseInt(v("dem_cmax"));
+  const pins = [...document.querySelectorAll(".pcheck:checked")].map(x=>parseInt(x.value));
+  const out = document.getElementById("dem_result");
+  const tbody = document.getElementById("dem_table");
+  if(!p||!c||!rpm||!target||!pins.length||cmin>cmax){
+    out.innerHTML='<span class="pill pill-warn">⚠️ Vérifie les entrées.</span>';
+    tbody.innerHTML="";
+    return;
+  }
+  const ratio = c/p;
+  const tr = ratio*target/rpm;
+  const rows = [];
+  for(const pp of pins){
+    for(let cc=cmin;cc<=cmax;cc++){
+      const r = cc/pp;
+      const est = rpm*(r/ratio);
+      const delta = est-target;
+      rows.push({pp,cc,r,est,delta,abs:Math.abs(delta)});
+    }
+  }
+  rows.sort((a,b)=>a.abs-b.abs);
+  const b = rows[0];
+  let dir="Ne pas toucher";
+  if(rpm>target+100) dir="Allonger (+couronne ou -pignon)";
+  else if(rpm<target-100) dir="Raccourcir (-couronne ou +pignon)";
+  let advice="";
+  if(rpm>15200) advice='<span class="pill pill-warn">Au-dessus de 15 200 — protège le moteur, allonge.</span>';
+  else if(rpm<14800) advice='<span class="pill pill-warn">En dessous de 14 800 — vérifie aussi sortie virage.</span>';
+  else advice='<span class="pill pill-ok">Bonne zone.</span>';
+  out.innerHTML = `
+    <div>Rapport actuel : <strong>${fmt(ratio,3)}</strong> · cible : <strong>${fmt(tr,3)}</strong></div>
+    <div>Direction : <strong>${dir}</strong></div>
+    <div>Conseil : <strong>${b.pp}×${b.cc}</strong> ≈ ${Math.round(b.est)} tr/min (Δ ${b.delta>0?"+":""}${Math.round(b.delta)})</div>
+    <div style="margin-top:6px">${advice}</div>
+  `;
+  tbody.innerHTML = rows.slice(0,10).map((x,i)=>`<tr style="${i===0?'background:#14532d;color:#bbf7d0;font-weight:700':''}"><td>${x.pp}×${x.cc}</td><td>${fmt(x.r,3)}</td><td>${Math.round(x.est)}</td><td>${x.delta>0?"+":""}${Math.round(x.delta)}</td></tr>`).join("");
+}
+function renderHistTrans(){
+  const tb = document.getElementById("dem_history");
+  tb.innerHTML = HIST_TRANSMISSIONS.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td><td>${fmt(x[3],3)}</td></tr>`).join("");
+}
+
+/* ===== COUPLES ===== */
+function updateTorqueRef(){
+  const val = v("torque_part");
+  const box = document.getElementById("torque_result");
+  if(!val){ box.style.display="none"; return; }
+  const [tmin,tmax,tool,size,desc] = val.split("|");
+  box.style.display="block";
+  box.innerHTML = `
+    <div class="torque-result">${tmin}–${tmax} Nm</div>
+    <div><strong>Outil :</strong> ${tool}</div>
+    <div><strong>Taille :</strong> ${size}</div>
+    <div class="small" style="margin-top:6px">${desc}</div>
+  `;
+}
+
+/* ===== CHECKLISTS ===== */
+function renderChecklists(){
+  const buildList = (items, prefix) => items.map((t,i)=>{
+    const id = `${prefix}_${i}`;
+    return `<label class="check-row" id="row_${id}"><input type="checkbox" id="${id}" onchange="onCheck('${id}','row_${id}')"><span>${t}</span></label>`;
+  }).join("");
+  document.getElementById("check_pre").innerHTML = buildList(CHECK_PRE, "cpre");
+  document.getElementById("check_post").innerHTML = buildList(CHECK_POST, "cpost");
+}
+function onCheck(id, rowId){
+  const el = document.getElementById(id);
+  document.getElementById(rowId).classList.toggle("done", el.checked);
+}
+function resetChecks(which){
+  const prefix = which==="pre"?"cpre":"cpost";
+  const list = which==="pre"?CHECK_PRE:CHECK_POST;
+  list.forEach((_,i)=>{
+    const cb = document.getElementById(`${prefix}_${i}`);
+    if(cb){ cb.checked=false; document.getElementById(`row_${prefix}_${i}`).classList.remove("done"); }
+  });
+}
+
+/* ===== MIGRATION v7/v8/v9 → v10 ===== */
+function migrateFromOldVersions(){
+  const oldKeys = ["fiche_karting_local_v7","fiche_karting_local_v8","fiche_karting_local_v9","fiche_karting_v9_form"];
+  const migrated = localStorage.getItem("fiche_karting_v10_migrated");
+  if(migrated) return;
+  // Si on a déjà des données v10, on ne migre pas
+  if(localStorage.getItem(STORAGE_FORM)){ localStorage.setItem("fiche_karting_v10_migrated","1"); return; }
+  for(const key of oldKeys){
+    const raw = localStorage.getItem(key);
+    if(!raw) continue;
+    try{
+      const old = JSON.parse(raw);
+      // Mapping noms qui ont changé
+      const renamed = {
+        axe_h:"axe_h",
+        axe_l:"axe_l",
+        chasse:"chasse_carr",
+        egt:"egt_haut",      // v9 avait une seule valeur EGT, c'est l'EGT haut régime
+        axe_etat:"axe_bride" // v9 utilisait axe_etat
+      };
+      const merged = {};
+      Object.keys(old).forEach(k=>{
+        const newKey = renamed[k] || k;
+        merged[newKey] = old[k];
+      });
+      localStorage.setItem(STORAGE_FORM, JSON.stringify(merged));
+      localStorage.setItem("fiche_karting_v10_migrated","1");
+      console.log(`Migrated from ${key}`);
+      return;
+    }catch(e){console.warn("Migration error:",e)}
+  }
+  localStorage.setItem("fiche_karting_v10_migrated","1");
+}
+
+/* ===== INIT ===== */
+function init(){
+  migrateFromOldVersions();
+  window._currentRunId = null;
+  if(!v("date")) setv("date", new Date().toISOString().slice(0,10));
+  buildLaps();
+  loadForm();
+  updateDiag();
+  updateLapStats();
+  updatePressureDelta();
+  updateCarbAnalysis();
+  renderChecklists();
+  updateHistCount();
+  updateSaveButtonLabel();
+  ["probleme","rpm_max","entree","sortie","freinage"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.addEventListener("change",updateDiag); el.addEventListener("input",updateDiag); }
+  });
+  ["egt_bas","egt_haut","cht","cible_haut_min","cible_haut_max","cible_bas_min","cible_bas_max"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.addEventListener("input",updateCarbAnalysis); }
+  });
+  // Autosave : on change/blur uniquement, pas oninput partout (perf)
+  ALL_IDS.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.addEventListener("change",saveForm);
+      el.addEventListener("blur",saveForm);
+    }
+  });
+}
+document.addEventListener("DOMContentLoaded", init);
+
+// Service worker volontairement désactivé : évite les problèmes de cache lors des MAJ.
+// Si un ancien SW existe (depuis une version précédente), on le désinscrit au démarrage.
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  });
+  if("caches" in window){
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+  }
+}
+</script>
+</body>
+</html>
