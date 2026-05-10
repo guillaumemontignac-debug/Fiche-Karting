@@ -698,7 +698,15 @@ function loadForm(){
   }catch(e){console.warn(e)}
 }
 function getRuns(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_RUNS)||"[]"); }catch(e){return []}
+  // Retourne TOUJOURS des deep copies pour qu'aucune mutation accidentelle
+  // d'un run en mémoire ne se propage à l'historique sauvé
+  try{
+    const raw = localStorage.getItem(STORAGE_RUNS) || "[]";
+    const arr = JSON.parse(raw);
+    if(!Array.isArray(arr)) return [];
+    // Deep copy via stringify/parse (suffit pour des objets sans Date/RegExp)
+    return JSON.parse(JSON.stringify(arr));
+  }catch(e){return []}
 }
 function setRuns(arr){ localStorage.setItem(STORAGE_RUNS, JSON.stringify(arr)); updateHistCount(); }
 function updateHistCount(){
@@ -710,17 +718,18 @@ function saveRun(){
   const runs = getRuns();
   let d;
   if(isUpdate){
-    // Mise à jour du run existant
+    // Mise à jour du run existant — deep copy pour éviter toute référence partagée
     const idx = runs.findIndex(r=>r.id===window._currentRunId);
     if(idx<0){ window._currentRunId=null; return saveRun(); } // safety : run plus là
-    d = {...runs[idx]};
+    try { d = JSON.parse(JSON.stringify(runs[idx])); }
+    catch(e) { d = {...runs[idx]}; }
     d.updatedAt = new Date().toISOString();
   } else {
     // Nouveau run
     d = {id: uid(), version: VERSION, savedAt: new Date().toISOString()};
   }
   ALL_IDS.forEach(id => d[id]=v(id));
-  d.weather = window._weather || null;
+  d.weather = window._weather ? JSON.parse(JSON.stringify(window._weather)) : null;
   d.cause = document.getElementById("cause").textContent;
   d.action = document.getElementById("action").textContent;
   d.best_lap = document.getElementById("best_lap").textContent;
@@ -1098,9 +1107,31 @@ async function parseAlfano(ev){
   const result = document.getElementById("alfano_result");
   result.innerHTML = '<span class="pill pill-info">⏳ Lecture...</span>';
   try{
-    // Tri : SN d'abord (session), puis LAP_X par numéro
+    // 1. Trouver le fichier session (SN*)
     const sessionFile = files.find(f => /^SN\d+/.test(f.name) || (!/^LAP_/.test(f.name) && f.name.toLowerCase().endsWith(".csv") && !/^A\d|param|temps_moteur|info/i.test(f.name)));
-    const lapFiles = files.filter(f => /^LAP_(\d+)_/.test(f.name)).sort((a,b)=>{
+
+    // 2. Filtrer strictement les LAP files :
+    //    - doivent commencer par LAP_X_
+    //    - doivent avoir le même "identifiant de session" (les 4 derniers chiffres du nom de fichier avant .csv)
+    //      pour ne pas mélanger les runs si l'utilisateur a sélectionné plusieurs dossiers
+    let sessionId = null;
+    if(sessionFile){
+      // Exemple : SN11101_260426_10H47_HUGO_..._6_5635.csv → sessionId = 5635
+      const m = sessionFile.name.match(/_(\d{3,5})\.csv$/i);
+      if(m) sessionId = m[1];
+    }
+    let lapFiles = files.filter(f => /^LAP_(\d+)_/.test(f.name) && f.name.toLowerCase().endsWith(".csv"));
+    if(sessionId){
+      // Garder UNIQUEMENT les LAP qui ont le même sessionId
+      const matchingLaps = lapFiles.filter(f => {
+        const m = f.name.match(/_(\d{3,5})\.csv$/i);
+        return m && m[1] === sessionId;
+      });
+      // Si on trouve des LAP avec le même ID, on les utilise
+      // Sinon on garde tous les LAP (cas où l'ID ne matche pas, on fait au mieux)
+      if(matchingLaps.length > 0) lapFiles = matchingLaps;
+    }
+    lapFiles = lapFiles.sort((a,b)=>{
       const na = parseInt(a.name.match(/^LAP_(\d+)_/)[1]);
       const nb = parseInt(b.name.match(/^LAP_(\d+)_/)[1]);
       return na-nb;
@@ -1112,7 +1143,7 @@ async function parseAlfano(ev){
                     chtMax:0,
                     speedMin:Infinity, speedMax:0};
 
-    // 1. Lire le fichier session si présent
+    // 3. Lire le fichier session si présent
     if(sessionFile){
       const text = await sessionFile.text();
       const lines = text.split(/\r?\n/).filter(l=>l.trim());
@@ -1303,6 +1334,13 @@ async function parseAlfano(ev){
       applyOrConflict("speed_min", sMin, "Vitesse mini (km/h)");
     }
     // Tours : toujours écrasés (l'Alfano est la source de vérité pour les chronos)
+    // D'abord vider les 10 lignes pour ne pas garder de chronos d'un import/run précédent
+    for(let i=1;i<=10;i++){
+      for(let p=1;p<=4;p++){
+        const el = document.getElementById(`lap_${i}_${p}`);
+        if(el) el.value = "";
+      }
+    }
     imported.laps.sort((a,b)=>a.n-b.n).slice(0,10).forEach((lt,i)=>{
       setv(`lap_${i+1}_1`, lt.t.toFixed(3));
       let line = `Tour ${i+1} : ${fmtLap(lt.t)}`;
@@ -1314,6 +1352,24 @@ async function parseAlfano(ev){
 
     // Affichage du résultat avec gestion des conflits
     let html = "";
+    // Bannière de debug : indique quel run sera affecté à la prochaine MAJ
+    {
+      const editId = window._currentRunId;
+      let editLabel = "(nouveau run — aucun run existant ne sera modifié)";
+      if(editId){
+        const editRun = getRuns().find(r => r.id === editId);
+        if(editRun){
+          editLabel = `<strong>${editRun.circuit||"?"} · ${editRun.session||"?"} · ${editRun.date||"?"}</strong>`;
+        } else {
+          editLabel = "(run inconnu)";
+        }
+      }
+      const totalRuns = getRuns().length;
+      html += `<div class="alert" style="margin-bottom:8px;background:#1e293b;border:1px solid var(--line);font-size:12px;color:#cbd5e1">
+        🔎 <strong>Cible de l'import :</strong> ${editLabel}<br>
+        Historique : ${totalRuns} runs sauvés. Seuls les champs du formulaire sont écrits, les autres runs ne sont pas touchés tant que tu n'appuies pas sur MAJ.
+      </div>`;
+    }
     if(applied.length){
       html += `<div class="alert alert-ok"><strong>✓ Import Alfano 6 réussi</strong> (${imported.laps.length} tours)<br>${applied.join("<br>")}</div>`;
     }
@@ -1334,7 +1390,7 @@ async function parseAlfano(ev){
       window._conflicts = conflicts;
     }
     if(!applied.length && !conflicts.length){
-      html = `<div class="alert alert-warn">⚠️ Aucune donnée nouvelle à importer (tout est déjà identique).</div>`;
+      html += `<div class="alert alert-warn">⚠️ Aucune donnée nouvelle à importer (tout est déjà identique).</div>`;
     }
     result.innerHTML = html;
     updateLapStats();
@@ -1434,11 +1490,23 @@ function toggleSelect(id){
   renderHistory();
 }
 function loadRun(id){
-  const r = getRuns().find(x=>x.id===id);
+  // Récupérer le run et en faire une deep copy locale (jamais de référence vers l'historique)
+  const all = getRuns(); // déjà deep-copié par getRuns
+  const r = all.find(x=>x.id===id);
   if(!r) return;
+  // Vider TOUS les champs du formulaire pour n'avoir aucun résidu d'un précédent run/session
+  ALL_IDS.forEach(clearField);
+  // Charger les valeurs primitives du run dans le formulaire
   ALL_IDS.forEach(k => { if(r[k]!==undefined) setv(k,r[k]); });
-  if(r.weather){ window._weather=r.weather; renderWeather(); }
-  else { window._weather=null; document.getElementById("weather_box").style.display="none"; }
+  // Météo : deep copy explicite
+  if(r.weather){
+    try { window._weather = JSON.parse(JSON.stringify(r.weather)); }
+    catch(e) { window._weather = r.weather; }
+    renderWeather();
+  } else {
+    window._weather=null;
+    document.getElementById("weather_box").style.display="none";
+  }
   window._currentRunId = id;
   updateSaveButtonLabel();
   updateDiag(); updateLapStats(); updatePressureDelta(); updateCarbAnalysis();
@@ -1602,6 +1670,8 @@ function stepDem(id, step){
   if(!isNaN(mn) && val < mn) val = mn;
   if(!isNaN(mx) && val > mx) val = mx;
   el.value = val;
+  // Déclencher l'event input pour que tout listener (oninput) soit notifié
+  try { el.dispatchEvent(new Event('input', {bubbles:true})); } catch(e){}
   calcDem();
 }
 
