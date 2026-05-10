@@ -84,6 +84,12 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
 .dem-mini{min-height:44px;border:1px solid var(--line);background:#1f2937;color:#fff;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;padding:0;line-height:1}
 .dem-mini:active{background:#334155}
 
+/* Pignons candidats — chips toggle bien visibles */
+.pin-chip{display:inline-flex;align-items:center;justify-content:center;min-width:48px;min-height:40px;padding:0 14px;margin:4px 4px 4px 0;border-radius:20px;border:2px solid var(--line);background:#1f2937;color:#94a3b8;font-size:15px;font-weight:700;cursor:pointer;transition:all .12s}
+.pin-chip:active{transform:scale(.95)}
+.pin-chip.selected{background:#15803d;border-color:#22c55e;color:#fff;box-shadow:0 0 0 2px rgba(34,197,94,.25)}
+.pin-chip.selected::before{content:"✓ ";font-weight:900}
+
 /* Schéma kart visuel pour pressions */
 .kart-diagram{position:relative;background:#0b1220;border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:14px 8px;margin-top:10px}
 .kart-title{font-size:11px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700}
@@ -444,11 +450,11 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
         <div><label>Couronne max</label><input id="dem_cmax" type="number" value="85" min="40" max="100" oninput="calcDem()"></div>
       </div>
       <div style="margin-top:10px;font-size:13px">
-        <span class="chip">Pignons :</span>
-        <label class="chip"><input type="checkbox" class="pcheck" value="10" checked onchange="calcDem()"> 10</label>
-        <label class="chip"><input type="checkbox" class="pcheck" value="11" checked onchange="calcDem()"> 11</label>
-        <label class="chip"><input type="checkbox" class="pcheck" value="12" onchange="calcDem()"> 12</label>
-        <label class="chip"><input type="checkbox" class="pcheck" value="13" onchange="calcDem()"> 13</label>
+        <span class="chip" style="background:transparent;border:none;font-weight:700">Pignons candidats :</span>
+        <button type="button" class="pin-chip selected" data-value="10" onclick="togglePinChip(this)">10</button>
+        <button type="button" class="pin-chip selected" data-value="11" onclick="togglePinChip(this)">11</button>
+        <button type="button" class="pin-chip" data-value="12" onclick="togglePinChip(this)">12</button>
+        <button type="button" class="pin-chip" data-value="13" onclick="togglePinChip(this)">13</button>
       </div>
       <div class="diag" id="dem_result" style="margin-top:10px"></div>
       <h2 style="margin-top:14px;font-size:14px">Meilleurs choix</h2>
@@ -605,7 +611,7 @@ const FORM_IDS = [
   "commentaires"
 ];
 const LAP_IDS = [];
-for(let i=1;i<=10;i++){ for(let p=1;p<=4;p++){ LAP_IDS.push(`lap_${i}_${p}`); } }
+for(let i=1;i<=15;i++){ for(let p=1;p<=4;p++){ LAP_IDS.push(`lap_${i}_${p}`); } }
 const ALL_IDS = [...FORM_IDS, ...LAP_IDS];
 
 /* ===== UTILS ===== */
@@ -634,7 +640,7 @@ function toggleSection(el){ el.classList.toggle("collapsed"); }
 /* ===== LAPS ===== */
 function buildLaps(){
   let html="";
-  for(let i=1;i<=10;i++){
+  for(let i=1;i<=15;i++){
     html += `<div class="lap-row">
       <div class="lap-num">${i}</div>
       <input id="lap_${i}_1" inputmode="decimal" placeholder="Tour" oninput="updateLapStats();saveForm()">
@@ -665,7 +671,7 @@ function fmtLap(t){
 }
 function updateLapStats(){
   const laps=[];
-  for(let i=1;i<=10;i++){
+  for(let i=1;i<=15;i++){
     const t = parseLap(v(`lap_${i}_1`));
     if(t!=null && t>0) laps.push(t);
   }
@@ -1139,7 +1145,8 @@ async function parseAlfano(ev){
 
     let imported = {circuit:"", pilote:"", date:"", heure:"", laps:[],
                     rpmMax:0, rpmMin:Infinity,
-                    egtMin:Infinity, egtMax:0,
+                    egtHautSum:0, egtHautCount:0,  // Pour calculer la moyenne des Max T2 par tour (vis H)
+                    egtBasSum:0,  egtBasCount:0,   // Pour calculer la moyenne des Min T2 par tour (vis L)
                     chtMax:0,
                     speedMin:Infinity, speedMax:0};
 
@@ -1200,12 +1207,11 @@ async function parseAlfano(ev){
           imported.laps.push(lap);
           if(cMaxRpm>=0){ const val=parseFloat(r[cMaxRpm]); if(!isNaN(val) && val>0 && val>imported.rpmMax) imported.rpmMax=val; }
           if(cMinRpm>=0){ const val=parseFloat(r[cMinRpm]); if(!isNaN(val) && val>3000 && val<imported.rpmMin) imported.rpmMin=val; }
-          // T2 = EGT (×10) sur Alfano 6 KA100
-          if(cMaxT2>=0){ const v=parseFloat(r[cMaxT2]); if(!isNaN(v) && v>imported.egtMax) imported.egtMax=v; }
-          if(cMinT2>=0){ const v=parseFloat(r[cMinT2]); if(!isNaN(v) && v>500 && v<imported.egtMin) imported.egtMin=v; }
+          // T2 = EGT (×10) sur Alfano 6 KA100. On ACCUMULE les Max T2 / Min T2 par tour pour faire la moyenne ensuite
+          if(cMaxT2>=0){ const v=parseFloat(r[cMaxT2]); if(!isNaN(v) && v>0){ imported.egtHautSum+=v; imported.egtHautCount++; } }
+          if(cMinT2>=0){ const v=parseFloat(r[cMinT2]); if(!isNaN(v) && v>500){ imported.egtBasSum+=v; imported.egtBasCount++; } }
           // T1 = eau / culasse (×10), souvent 0 sur KA100 air
           if(cMaxT1>=0){ const v=parseFloat(r[cMaxT1]); if(!isNaN(v) && v>imported.chtMax) imported.chtMax=v; }
-          if(cMaxEgt>=0){ const v=parseFloat(r[cMaxEgt]); if(!isNaN(v) && v>imported.egtMax) imported.egtMax=v; }
           if(cMaxSpeed>=0){ const v=parseFloat(r[cMaxSpeed]); if(!isNaN(v) && v>imported.speedMax) imported.speedMax=v; }
           if(cMinSpeed>=0){ const v=parseFloat(r[cMinSpeed]); if(!isNaN(v) && v>50 && v<imported.speedMin) imported.speedMin=v; }
         }
@@ -1218,7 +1224,9 @@ async function parseAlfano(ev){
     if(lapFiles.length){
       // Reset des max moteur si on a accès aux LAP_X (plus fiables que SN)
       let lapRpmMax = 0, lapRpmMin = Infinity;
-      let lapEgtMax = 0, lapEgtMin = Infinity;
+      // EGT moyennée : on calcule un Min T2 et un Max T2 par fichier (=par tour) et on accumule
+      let lapEgtHautSum = 0, lapEgtHautCount = 0;
+      let lapEgtBasSum = 0, lapEgtBasCount = 0;
       let lapChtMax = 0;
       let lapSpeedMax = 0, lapSpeedMin = Infinity;
       for(const lf of lapFiles){
@@ -1242,14 +1250,15 @@ async function parseAlfano(ev){
           if(med>0 && med<18000 && med>lapRpmMax) lapRpmMax = med;
           if(med>3000 && med<lapRpmMin) lapRpmMin = med;
         }
-        // T1 (CHT), T2 (EGT), Speed : on prend min et max bruts (capteurs lents, peu d'artefacts)
+        // T2 (EGT) : on calcule min ET max sur ce tour, puis on accumule pour la moyenne
+        let tourEgtMax = 0, tourEgtMin = Infinity;
         for(let i=1;i<lines.length;i++){
           const r = lines[i].split(",");
           if(cT2>=0){
             const v=parseFloat(r[cT2]);
             if(!isNaN(v)){
-              if(v>lapEgtMax) lapEgtMax=v;
-              if(v>500 && v<lapEgtMin) lapEgtMin=v; // ignore températures de démarrage
+              if(v>tourEgtMax) tourEgtMax=v;
+              if(v>500 && v<tourEgtMin) tourEgtMin=v; // ignore températures de démarrage
             }
           }
           if(cT1>=0){ const v=parseFloat(r[cT1]); if(!isNaN(v) && v>lapChtMax) lapChtMax=v; }
@@ -1261,11 +1270,20 @@ async function parseAlfano(ev){
             }
           }
         }
+        if(tourEgtMax>0){ lapEgtHautSum += tourEgtMax; lapEgtHautCount++; }
+        if(tourEgtMin<Infinity){ lapEgtBasSum += tourEgtMin; lapEgtBasCount++; }
       }
       if(lapRpmMax>0) imported.rpmMax = lapRpmMax;
       if(lapRpmMin<Infinity) imported.rpmMin = lapRpmMin;
-      if(lapEgtMax>imported.egtMax) imported.egtMax = lapEgtMax;
-      if(lapEgtMin<imported.egtMin) imported.egtMin = lapEgtMin;
+      // Si les LAP_X ont fourni assez de données EGT, ils remplacent l'estimation issue du SN
+      if(lapEgtHautCount > 0){
+        imported.egtHautSum = lapEgtHautSum;
+        imported.egtHautCount = lapEgtHautCount;
+      }
+      if(lapEgtBasCount > 0){
+        imported.egtBasSum = lapEgtBasSum;
+        imported.egtBasCount = lapEgtBasCount;
+      }
       if(lapChtMax>imported.chtMax) imported.chtMax = lapChtMax;
       if(lapSpeedMax>imported.speedMax) imported.speedMax = lapSpeedMax;
       if(lapSpeedMin<imported.speedMin) imported.speedMin = lapSpeedMin;
@@ -1310,15 +1328,17 @@ async function parseAlfano(ev){
     if(imported.heure) applyOrConflict("heure", imported.heure, "Heure");
     if(imported.rpmMax>0) applyOrConflict("rpm_max", String(Math.round(imported.rpmMax)), "RPM max");
     if(imported.rpmMin>0 && imported.rpmMin<Infinity) applyOrConflict("rpm_sortie", String(Math.round(imported.rpmMin)), "RPM mini");
-    // EGT haut (Max T2) → vis H
-    if(imported.egtMax>0){
-      const egtH = imported.egtMax > 1000 ? Math.round(imported.egtMax/10) : Math.round(imported.egtMax);
-      applyOrConflict("egt_haut", String(egtH), "EGT haut (vis H)");
+    // EGT haut (moyenne des Max T2 par tour) → vis H
+    if(imported.egtHautCount > 0){
+      const avg = imported.egtHautSum / imported.egtHautCount;
+      const egtH = avg > 1000 ? Math.round(avg/10) : Math.round(avg);
+      applyOrConflict("egt_haut", String(egtH), `EGT haut moy. (vis H, sur ${imported.egtHautCount} tours)`);
     }
-    // EGT bas (Min T2) → vis L
-    if(imported.egtMin>0 && imported.egtMin<Infinity){
-      const egtL = imported.egtMin > 1000 ? Math.round(imported.egtMin/10) : Math.round(imported.egtMin);
-      applyOrConflict("egt_bas", String(egtL), "EGT bas (vis L)");
+    // EGT bas (moyenne des Min T2 par tour) → vis L
+    if(imported.egtBasCount > 0){
+      const avg = imported.egtBasSum / imported.egtBasCount;
+      const egtL = avg > 1000 ? Math.round(avg/10) : Math.round(avg);
+      applyOrConflict("egt_bas", String(egtL), `EGT bas moy. (vis L, sur ${imported.egtBasCount} tours)`);
     }
     if(imported.chtMax>0){
       const cht = imported.chtMax > 1000 ? Math.round(imported.chtMax/10) : Math.round(imported.chtMax);
@@ -1335,13 +1355,13 @@ async function parseAlfano(ev){
     }
     // Tours : toujours écrasés (l'Alfano est la source de vérité pour les chronos)
     // D'abord vider les 10 lignes pour ne pas garder de chronos d'un import/run précédent
-    for(let i=1;i<=10;i++){
+    for(let i=1;i<=15;i++){
       for(let p=1;p<=4;p++){
         const el = document.getElementById(`lap_${i}_${p}`);
         if(el) el.value = "";
       }
     }
-    imported.laps.sort((a,b)=>a.n-b.n).slice(0,10).forEach((lt,i)=>{
+    imported.laps.sort((a,b)=>a.n-b.n).slice(0,15).forEach((lt,i)=>{
       setv(`lap_${i+1}_1`, lt.t.toFixed(3));
       let line = `Tour ${i+1} : ${fmtLap(lt.t)}`;
       if(lt.p1){ setv(`lap_${i+1}_2`, lt.p1.toFixed(3)); line += ` · P1 ${lt.p1.toFixed(3)}`; }
@@ -1521,7 +1541,7 @@ function duplicateRun(id){
   window._currentRunId = null;
   updateSaveButtonLabel();
   ["session","heure","rpm_max","rpm_sortie","speed_max","speed_min","egt_bas","egt_haut","cht","action_testee"].forEach(clearField);
-  for(let i=1;i<=10;i++){ for(let p=1;p<=4;p++){ clearField(`lap_${i}_${p}`); } }
+  for(let i=1;i<=15;i++){ for(let p=1;p<=4;p++){ clearField(`lap_${i}_${p}`); } }
   updateLapStats();
   alert("Run dupliqué dans la fiche. Modifie ce qui change puis Sauver pour créer un nouveau run.");
 }
@@ -1661,6 +1681,11 @@ function renderCompare(){
 }
 
 /* ===== DEMULTIPLICATION ===== */
+function togglePinChip(btn){
+  btn.classList.toggle("selected");
+  calcDem();
+}
+
 function stepDem(id, step){
   const el = document.getElementById(id);
   if(!el) return;
@@ -1682,7 +1707,7 @@ function calcDem(){
   const target = parseInt(v("dem_target"));
   const cmin = parseInt(v("dem_cmin"));
   const cmax = parseInt(v("dem_cmax"));
-  const pins = [...document.querySelectorAll(".pcheck:checked")].map(x=>parseInt(x.value));
+  const pins = [...document.querySelectorAll(".pin-chip.selected")].map(x=>parseInt(x.dataset.value));
   const out = document.getElementById("dem_result");
   const tbody = document.getElementById("dem_table");
   if(!p||!c||!rpm||!target||!pins.length||cmin>cmax){
