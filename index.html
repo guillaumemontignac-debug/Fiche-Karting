@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Karting">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Fiche karting v10</title>
+<title>Fiche karting v11</title>
 <style>
 :root{--bg:#0f172a;--panel:#111827;--panel2:#1f2937;--line:#334155;--text:#e5e7eb;--muted:#94a3b8;--blue:#2563eb;--green:#15803d;--orange:#c2410c;--red:#7f1d1d}
 *{box-sizing:border-box}
@@ -116,24 +116,58 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
   .tire-grid{gap:3px}
 }
 
-/* Print : retire les boutons et passe en clair pour PDF */
+
+/* Combo select+libre : l'input caché porte la valeur réelle */
+.combo-wrap{position:relative;display:flex;gap:6px;align-items:stretch}
+.combo-sel{flex:1;min-height:46px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:16px;appearance:none}
+.combo-free-input{flex:1;min-height:46px;padding:11px 12px;border-radius:12px;border:2px solid var(--blue);background:var(--panel2);color:var(--text);font-size:16px;display:none;-webkit-user-select:text;user-select:text}
+.combo-free-input.show{display:block}
+.combo-sel.hide{display:none}
+.combo-btn{min-height:46px;width:44px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:16px;cursor:pointer;flex-shrink:0}
+.combo-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* Print : PDF compact ~2 pages */
 @media print {
-  body{background:white;color:black}
-  .sticky,.tabs,.collapsible::after,#alfano_file,.run-actions,#weather_box,.alert,.btn1,.btn2,.btn3,.btn4,.btn5,#carb_analysis,#hist_search,#csv_output{display:none !important}
-  .section{background:white !important;color:black !important;border:1px solid #ccc !important;page-break-inside:avoid;box-shadow:none !important}
-  .section h2{color:black !important}
-  input,select,textarea{background:white !important;color:black !important;border:1px solid #999 !important}
-  .delta,.chip,.diag,.tire-box,.kart-body,.kart-diagram{background:white !important;color:black !important;border:1px solid #ccc !important}
-  .wrap{padding:8px;max-width:none}
-  .view{display:none !important}
-  #view-fiche{display:block !important}
+  @page{margin:10mm 12mm;size:A4}
+  body{background:white!important;color:#111!important;font-size:9pt!important}
+  .sticky,.tabs,.collapsible::after,#alfano_file,.run-actions,#weather_box,
+  #carb_analysis,#carb_hint,#hist_search,#csv_output,
+  .combo-btn,.btn1,.btn2,.btn3,.btn4,.btn5,
+  details,.hint{display:none!important}
+  .view{display:none!important}
+  #view-fiche{display:block!important}
+  .section{background:white!important;color:#111!important;border:1px solid #aaa!important;
+    border-radius:3px!important;padding:5px 7px!important;margin:0 0 5px!important;
+    box-shadow:none!important;page-break-inside:avoid}
+  h1{font-size:12pt!important;margin:0 0 2px!important}
+  h2{font-size:9pt!important;margin:0 0 3px!important;border-bottom:1px solid #ccc;padding-bottom:1px}
+  label{font-size:7.5pt!important;margin:0 0 1px!important;color:#444!important}
+  input,select,textarea,.combo-sel{background:white!important;color:#111!important;
+    border:0!important;border-bottom:1px solid #bbb!important;border-radius:0!important;
+    min-height:16px!important;padding:1px 2px!important;font-size:8.5pt!important}
+  .combo-free-input{display:none!important}
+  .combo-wrap{display:block!important}
+  .combo-sel{display:block!important;width:100%!important}
+  textarea{min-height:28px!important}
+  .grid{grid-template-columns:1fr 1fr!important;gap:4px!important}
+  .grid3{grid-template-columns:1fr 1fr 1fr!important;gap:3px!important}
+  .grid4{grid-template-columns:repeat(4,1fr)!important;gap:2px!important}
+  .lap-row{grid-template-columns:18px 1fr 1fr!important;gap:2px!important;margin-bottom:1px!important}
+  .lap-row input{min-height:16px!important;font-size:7.5pt!important;padding:0 2px!important}
+  .partial-extra{display:none!important}
+  .diag{background:white!important;color:#111!important;border:1px solid #bbb!important;
+    padding:3px 5px!important;font-size:8pt!important}
+  .kart-diagram,.tire-box{background:white!important;border:1px solid #bbb!important;padding:3px!important}
+  .delta{background:white!important;color:#111!important;border:1px solid #bbb!important;font-size:7.5pt!important}
+  .wrap{padding:0!important;max-width:none!important}
+  .collapsible.collapsed + .collapsible-body{display:none!important}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="section topcard">
-    <h1>Fiche karting v10</h1>
+    <h1>Fiche karting v11</h1>
     <p class="sub">Fiche · Histo · Comparatif · Outils · Météo auto · Import Alfano</p>
     <div id="edit_banner" style="display:none;background:#1e3a8a;color:#bfdbfe;padding:8px 12px;border-radius:10px;margin-top:8px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px">
       <span>✏️ Édition d'un run existant. <strong>Sauver</strong> = mise à jour.</span>
@@ -155,25 +189,85 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
       <h2>Contexte</h2>
       <div class="grid">
         <div><label>Circuit</label>
-          <select id="circuit">
-            <option value=""></option>
-            <option>Aigues-Vives</option>
-            <option>Alès</option>
-            <option>Belmont</option>
-            <option>Berdery</option>
-            <option>Ganges</option>
-            <option>Layrac</option>
-            <option>Le Mans</option>
-            <option>Muret</option>
-            <option>Valence</option>
-            <option>Autre</option>
-          </select>
+          <input type="hidden" id="circuit">
+          <div class="combo-wrap">
+            <select id="circuit_sel" class="combo-sel" onchange="comboSelChange('circuit')">
+              <option value=""></option>
+              <option value="Aigues-Vives">Aigues-Vives</option>
+              <option value="Alès">Alès</option>
+              <option value="Aunay-les-Bois">Aunay-les-Bois</option>
+              <option value="Belmont">Belmont</option>
+              <option value="Berdery">Berdery</option>
+              <option value="Ganges">Ganges</option>
+              <option value="Layrac">Layrac</option>
+              <option value="Le Mans">Le Mans</option>
+              <option value="Lavelanet">Lavelanet</option>
+              <option value="Muret">Muret</option>
+              <option value="Nogaro">Nogaro</option>
+              <option value="Pau-Arnos">Pau-Arnos</option>
+              <option value="Salbris">Salbris</option>
+              <option value="Valence">Valence</option>
+              <option value="Varennes-sur-Allier">Varennes-sur-Allier</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="circuit_free" class="combo-free-input" placeholder="Nom du circuit..." oninput="comboFreeChange('circuit')">
+            <button id="circuit_btn" class="combo-btn" type="button" onclick="comboBtnClick('circuit')" title="Saisie libre">✏</button>
+          </div>
         </div>
-        <div><label>Session</label><select id="session"><option></option><option>Essai libres 1</option><option>Essai libres 2</option><option>Essai libres 3</option><option>Essai libres 4</option><option>Essai libres 5</option><option>Essai libres officiels</option><option>Essai qualificatif</option><option>Manche qualif 1</option><option>Manche qualif 2</option><option>Super Manche</option><option>Préfinale</option><option>Finale</option><option>Course</option><option>Autre</option></select></div>
+        <div><label>Session</label>
+          <input type="hidden" id="session">
+          <div class="combo-wrap">
+            <select id="session_sel" class="combo-sel" onchange="comboSelChange('session')">
+              <option value=""></option>
+              <option value="Essai libres 1">Essai libres 1</option>
+              <option value="Essai libres 2">Essai libres 2</option>
+              <option value="Essai libres 3">Essai libres 3</option>
+              <option value="Essai libres 4">Essai libres 4</option>
+              <option value="Essai libres 5">Essai libres 5</option>
+              <option value="Essai libres officiels">Essai libres officiels</option>
+              <option value="Essai qualificatif">Essai qualificatif</option>
+              <option value="Manche qualif 1">Manche qualif 1</option>
+              <option value="Manche qualif 2">Manche qualif 2</option>
+              <option value="Super Manche">Super Manche</option>
+              <option value="Préfinale">Préfinale</option>
+              <option value="Finale">Finale</option>
+              <option value="Course">Course</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="session_free" class="combo-free-input" placeholder="Ex: Warm-up..." oninput="comboFreeChange('session')">
+            <button id="session_btn" class="combo-btn" type="button" onclick="comboBtnClick('session')" title="Saisie libre">✏</button>
+          </div>
+        </div>
         <div><label>Date</label><input id="date" type="date"></div>
         <div><label>Heure</label><input id="heure" type="time"></div>
-        <div><label>Pilote</label><select id="pilote"><option></option><option>Hugo</option><option>Jaouen</option><option>Louka</option><option>Autre</option></select></div>
-        <div><label>Grip</label><select id="grip"><option></option><option>Faible</option><option>Moyen</option><option>Fort</option><option>Très fort</option></select></div>
+        <div><label>Pilote</label>
+          <input type="hidden" id="pilote">
+          <div class="combo-wrap">
+            <select id="pilote_sel" class="combo-sel" onchange="comboSelChange('pilote')">
+              <option value=""></option>
+              <option value="Hugo">Hugo</option>
+              <option value="Jaouen">Jaouen</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="pilote_free" class="combo-free-input" placeholder="Prénom du pilote..." oninput="comboFreeChange('pilote')">
+            <button id="pilote_btn" class="combo-btn" type="button" onclick="comboBtnClick('pilote')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+        <div><label>Grip</label>
+          <input type="hidden" id="grip">
+          <div class="combo-wrap">
+            <select id="grip_sel" class="combo-sel" onchange="comboSelChange('grip')">
+              <option value=""></option>
+              <option value="Faible">Faible</option>
+              <option value="Moyen">Moyen</option>
+              <option value="Fort">Fort</option>
+              <option value="Très fort">Très fort</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="grip_free" class="combo-free-input" placeholder="Ex: Très faible..." oninput="comboFreeChange('grip')">
+            <button id="grip_btn" class="combo-btn" type="button" onclick="comboBtnClick('grip')" title="Saisie libre">✏</button>
+          </div>
+        </div>
       </div>
       <div class="minirow" style="margin-top:10px">
         <div><label>Météo auto (date + heure + circuit)</label></div>
@@ -187,8 +281,36 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
       <div class="grid">
         <div><label>État de la piste</label><select id="piste_etat"><option></option><option>Sèche</option><option>Humide</option><option>Mouillée</option><option>Mixte</option></select></div>
         <div><label>Temp piste (°C)</label><input id="temp_piste" inputmode="decimal" placeholder="Ex : 35"></div>
-        <div><label>Type de pneu</label><select id="pneu_type"><option></option><option>Slicks Ligue</option><option>Slicks Entraînement</option><option>Slicks neufs</option><option>Pluie</option></select></div>
-        <div><label>Type de jante</label><select id="jante_type"><option></option><option>OTK MXJ</option><option>OTK MXC</option><option>DWT M séries</option><option>Pluie</option><option>Autre</option></select></div>
+        <div><label>Type de pneu</label>
+          <input type="hidden" id="pneu_type">
+          <div class="combo-wrap">
+            <select id="pneu_type_sel" class="combo-sel" onchange="comboSelChange('pneu_type')">
+              <option value=""></option>
+              <option value="Slicks Ligue">Slicks Ligue</option>
+              <option value="Slicks Entraînement">Slicks Entraînement</option>
+              <option value="Slicks neufs">Slicks neufs</option>
+              <option value="Pluie">Pluie</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="pneu_type_free" class="combo-free-input" placeholder="Ex: Slicks durs..." oninput="comboFreeChange('pneu_type')">
+            <button id="pneu_type_btn" class="combo-btn" type="button" onclick="comboBtnClick('pneu_type')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+        <div><label>Type de jante</label>
+          <input type="hidden" id="jante_type">
+          <div class="combo-wrap">
+            <select id="jante_type_sel" class="combo-sel" onchange="comboSelChange('jante_type')">
+              <option value=""></option>
+              <option value="OTK MXJ">OTK MXJ</option>
+              <option value="OTK MXC">OTK MXC</option>
+              <option value="DWT M séries">DWT M séries</option>
+              <option value="Pluie">Pluie</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="jante_type_free" class="combo-free-input" placeholder="Ex: OTK Gold..." oninput="comboFreeChange('jante_type')">
+            <button id="jante_type_btn" class="combo-btn" type="button" onclick="comboBtnClick('jante_type')" title="Saisie libre">✏</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -235,12 +357,86 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
     </div>
 
     <div class="section">
-      <h2>Ressenti</h2>
+      <h2>Ressenti pilote</h2>
       <div class="grid">
-        <div><label>Entrée</label><select id="entree"><option></option><option>OK</option><option>Propre</option><option>Pousse</option><option>Trop agressif</option></select></div>
-        <div><label>Milieu</label><select id="milieu"><option></option><option>OK</option><option>Stable</option><option>Flottant</option></select></div>
-        <div><label>Sortie</label><select id="sortie"><option></option><option>OK</option><option>Bonne traction</option><option>Glisse</option><option>Molle</option></select></div>
-        <div><label>Freinage</label><select id="freinage"><option></option><option>OK</option><option>Stable</option><option>Instable</option></select></div>
+        <div><label>Entrée de virage</label>
+          <input type="hidden" id="entree">
+          <div class="combo-wrap">
+            <select id="entree_sel" class="combo-sel" onchange="comboSelChange('entree')">
+              <option value=""></option>
+              <option value="OK">OK</option>
+              <option value="Propre">Propre</option>
+              <option value="Sous-virage (pousse)">Sous-virage (pousse)</option>
+              <option value="Survirage (agressif)">Survirage (agressif)</option>
+              <option value="Manque adhérence">Manque adhérence</option>
+              <option value="Kart lent à rentrer">Kart lent à rentrer</option>
+              <option value="Instable">Instable</option>
+              <option value="Nerveux">Nerveux</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="entree_free" class="combo-free-input" placeholder="Ressenti entrée..." oninput="comboFreeChange('entree')">
+            <button id="entree_btn" class="combo-btn" type="button" onclick="comboBtnClick('entree')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+        <div><label>Milieu de virage</label>
+          <input type="hidden" id="milieu">
+          <div class="combo-wrap">
+            <select id="milieu_sel" class="combo-sel" onchange="comboSelChange('milieu')">
+              <option value=""></option>
+              <option value="OK">OK</option>
+              <option value="Stable">Stable</option>
+              <option value="Flottant">Flottant</option>
+              <option value="Décrochage AR">Décrochage AR</option>
+              <option value="Kart plat">Kart plat</option>
+              <option value="Rebonds">Rebonds</option>
+              <option value="Kart se soulève">Kart se soulève</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="milieu_free" class="combo-free-input" placeholder="Ressenti milieu..." oninput="comboFreeChange('milieu')">
+            <button id="milieu_btn" class="combo-btn" type="button" onclick="comboBtnClick('milieu')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+        <div><label>Sortie de virage</label>
+          <input type="hidden" id="sortie">
+          <div class="combo-wrap">
+            <select id="sortie_sel" class="combo-sel" onchange="comboSelChange('sortie')">
+              <option value=""></option>
+              <option value="OK">OK</option>
+              <option value="Bonne traction">Bonne traction</option>
+              <option value="Glisse (patine)">Glisse (patine)</option>
+              <option value="Molle (relance faible)">Molle (relance faible)</option>
+              <option value="AR chasse">AR chasse</option>
+              <option value="Traction asymétrique">Traction asymétrique</option>
+              <option value="Roue intérieure lève trop">Roue intérieure lève trop</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="sortie_free" class="combo-free-input" placeholder="Ressenti sortie..." oninput="comboFreeChange('sortie')">
+            <button id="sortie_btn" class="combo-btn" type="button" onclick="comboBtnClick('sortie')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+        <div><label>Freinage</label>
+          <input type="hidden" id="freinage">
+          <div class="combo-wrap">
+            <select id="freinage_sel" class="combo-sel" onchange="comboSelChange('freinage')">
+              <option value=""></option>
+              <option value="OK">OK</option>
+              <option value="Stable">Stable</option>
+              <option value="Instable (part de côté)">Instable (part de côté)</option>
+              <option value="Pédale dure">Pédale dure</option>
+              <option value="Pédale molle">Pédale molle</option>
+              <option value="Blocage roue AR">Blocage roue AR</option>
+              <option value="Blocage roue AV">Blocage roue AV</option>
+              <option value="Freinage long">Freinage long</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="freinage_free" class="combo-free-input" placeholder="Ressenti freinage..." oninput="comboFreeChange('freinage')">
+            <button id="freinage_btn" class="combo-btn" type="button" onclick="comboBtnClick('freinage')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <label>Notes libres pilote</label>
+        <textarea id="ressenti_libre" placeholder="Sensations, comportement particulier du kart, points à améliorer..." style="min-height:70px"></textarea>
       </div>
     </div>
 
@@ -249,10 +445,29 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
       <p class="small">Si tu choisis un problème principal, il prime. Sinon le diagnostic se déduit des RPM et du ressenti.</p>
       <div class="grid">
         <div><label>Problème principal</label>
-          <select id="probleme">
-            <option></option><option>Sortie glisse</option><option>Sortie molle</option><option>Ne tourne pas</option>
-            <option>Survirage</option><option>Freinage instable</option><option>RPM trop bas</option><option>RPM trop haut</option>
-          </select>
+          <input type="hidden" id="probleme">
+          <div class="combo-wrap">
+            <select id="probleme_sel" class="combo-sel" onchange="comboSelChange('probleme')">
+              <option value=""></option>
+              <option value="Sortie glisse">Sortie glisse</option>
+              <option value="Sortie molle">Sortie molle</option>
+              <option value="Ne tourne pas">Ne tourne pas</option>
+              <option value="Survirage">Survirage</option>
+              <option value="Sous-virage">Sous-virage</option>
+              <option value="Freinage instable">Freinage instable</option>
+              <option value="RPM trop bas">RPM trop bas</option>
+              <option value="RPM trop haut">RPM trop haut</option>
+              <option value="Kart lent partout">Kart lent partout</option>
+              <option value="Rebonds / kart dur">Rebonds / kart dur</option>
+              <option value="Kart plat">Kart plat</option>
+              <option value="Roue intérieure décolle trop">Roue intérieure décolle trop</option>
+              <option value="Problème moteur">Problème moteur</option>
+              <option value="Problème frein">Problème frein</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="probleme_free" class="combo-free-input" placeholder="Décrire le problème..." oninput="comboFreeChange('probleme')">
+            <button id="probleme_btn" class="combo-btn" type="button" onclick="comboBtnClick('probleme')" title="Saisie libre">✏</button>
+          </div>
         </div>
         <div><label>Action testée</label><input id="action_testee" placeholder="Ex : +5 mm voie AR"></div>
       </div>
@@ -269,17 +484,83 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
           <div><label>Hauteur fusée</label><input id="hauteur_fusee" placeholder="Ex : Position 2"></div>
           <div><label>Chasse / Carrossage</label><input id="chasse_carr" placeholder="Ex : -1° / +1°"></div>
           <div><label>Pincement</label><input id="pincement" placeholder="Ex : 0 mm"></div>
-          <div><label>Voie AV (mm)</label><input id="voie_av" inputmode="numeric" placeholder="Ex : 1280"></div>
-          <div><label>Voie AR (mm)</label><input id="voie_ar" inputmode="numeric" placeholder="Ex : 1390"></div>
-          <div><label>Barre AV</label><select id="barre_av"><option></option><option>Carbone</option><option>Alu ronde</option><option>Alu en V</option></select></div>
-          <div><label>Moyeux</label><select id="moyeux"><option></option><option>90 mm</option><option>95 mm</option><option>Court</option><option>Long</option></select></div>
+          <div><label>Voie AV (nombre de bagues)</label>
+          <input type="hidden" id="voie_av">
+          <div class="combo-wrap">
+            <select id="voie_av_sel" class="combo-sel" onchange="comboSelChange('voie_av')">
+              <option value=""></option>
+              <option value="0">0</option>
+              <option value="0.5">0.5</option>
+              <option value="1">1</option>
+              <option value="1.5">1.5</option>
+              <option value="2">2</option>
+              <option value="2.5">2.5</option>
+              <option value="3">3</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="voie_av_free" class="combo-free-input" placeholder="Ex: 1.5" oninput="comboFreeChange('voie_av')">
+            <button id="voie_av_btn" class="combo-btn" type="button" onclick="comboBtnClick('voie_av')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+          <div><label>Voie AR (mm)</label><input id="voie_ar" inputmode="decimal" placeholder="Ex : 139.5"></div>
+          <div><label>Barre AV</label>
+          <input type="hidden" id="barre_av">
+          <div class="combo-wrap">
+            <select id="barre_av_sel" class="combo-sel" onchange="comboSelChange('barre_av')">
+              <option value=""></option>
+              <option value="Carbone">Carbone</option>
+              <option value="Alu ronde">Alu ronde</option>
+              <option value="Alu en V">Alu en V</option>
+              <option value="Sans">Sans</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="barre_av_free" class="combo-free-input" placeholder="Type de barre..." oninput="comboFreeChange('barre_av')">
+            <button id="barre_av_btn" class="combo-btn" type="button" onclick="comboBtnClick('barre_av')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+          <div><label>Moyeux</label>
+          <input type="hidden" id="moyeux">
+          <div class="combo-wrap">
+            <select id="moyeux_sel" class="combo-sel" onchange="comboSelChange('moyeux')">
+              <option value=""></option>
+              <option value="50 mm">50 mm</option>
+              <option value="60 mm">60 mm</option>
+              <option value="70 mm">70 mm</option>
+              <option value="80 mm">80 mm</option>
+              <option value="90 mm">90 mm</option>
+              <option value="95 mm">95 mm</option>
+              <option value="100 mm">100 mm</option>
+              <option value="Court">Court</option>
+              <option value="Long">Long</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="moyeux_free" class="combo-free-input" placeholder="Ex: 85 mm..." oninput="comboFreeChange('moyeux')">
+            <button id="moyeux_btn" class="combo-btn" type="button" onclick="comboBtnClick('moyeux')" title="Saisie libre">✏</button>
+          </div>
+        </div>
           <div><label>Axe AR hauteur</label><select id="axe_h"><option></option><option>Haut</option><option>Milieu</option><option>Bas</option></select></div>
           <div><label>Axe AR longueur</label><select id="axe_l"><option></option><option>Court</option><option>Milieu</option><option>Long</option></select></div>
           <div><label>Axe AR bridé</label><select id="axe_bride"><option></option><option>Bridé</option><option>Débridé</option></select></div>
           <div><label>Pare-choc AR</label><select id="parechoc"><option></option><option>Libre</option><option>Serré</option></select></div>
           <div><label>Type de chaîne</label><select id="type_chaine"><option></option><option>Standard</option><option>Joints toriques</option></select></div>
-          <div><label>Raidisseur</label><select id="raidisseur"><option></option><option>Sans</option><option>AV</option><option>AR</option><option>AV+AR</option></select></div>
-          <div><label>Rapport</label><input id="rapport" placeholder="Ex : 11x77"></div>
+          <div><label>Raidisseur</label>
+          <input type="hidden" id="raidisseur">
+          <div class="combo-wrap">
+            <select id="raidisseur_sel" class="combo-sel" onchange="comboSelChange('raidisseur')">
+              <option value=""></option>
+              <option value="Sans">Sans</option>
+              <option value="Droit">Droit</option>
+              <option value="Gauche">Gauche</option>
+              <option value="__free__">✏️ Autre...</option>
+            </select>
+            <input id="raidisseur_free" class="combo-free-input" placeholder="Ex: Droit + Gauche..." oninput="comboFreeChange('raidisseur')">
+            <button id="raidisseur_btn" class="combo-btn" type="button" onclick="comboBtnClick('raidisseur')" title="Saisie libre">✏</button>
+          </div>
+        </div>
+          <div><label>Rapport</label>
+          <input id="rapport" placeholder="Ex : 11x77" oninput="updateRapportCalc()">
+          <div id="rapport_calc" style="font-size:12px;color:#86efac;margin-top:4px;display:none"></div>
+        </div>
         </div>
       </div>
     </div>
@@ -397,8 +678,15 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
       <div class="grid">
         <button class="btn2" type="button" onclick="exportJSON()">Sauvegarde JSON</button>
         <button class="btn2" type="button" onclick="document.getElementById('import_json').click()">Importer JSON</button>
+        <button class="btn2" type="button" onclick="exportWeekendExcel()">Export Excel</button>
+        <button class="btn2" type="button" onclick="exportWeekendWord()">Export Word</button>
       </div>
       <input type="file" id="import_json" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+      <hr>
+      <h2>Résumé & analyse (IA)</h2>
+      <p class="small">Analyse de tous les runs : progression, réglages, carburation, conseils pour les prochains circuits.</p>
+      <button id="weekend_summary_btn" class="btn1" type="button" onclick="generateWeekendSummary()" style="background:#7c3aed;margin-bottom:10px">🤖 Générer l'analyse</button>
+      <div id="weekend_summary_box"></div>
     </div>
   </div>
 
@@ -529,9 +817,9 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
 
 <script>
 /* ===== CONSTANTES ===== */
-const STORAGE_FORM = "fiche_karting_v10_form";
-const STORAGE_RUNS = "fiche_karting_v10_runs";
-const VERSION = "v10";
+const STORAGE_FORM = "fiche_karting_v11_form";
+const STORAGE_RUNS = "fiche_karting_v11_runs";
+const VERSION = "v11";
 
 const CIRCUITS_GPS = {
   "Aigues-Vives": {lat:43.0075, lon:1.8836, label:"Le Kart'Are - Aigues-Vives (09)"},
@@ -608,7 +896,7 @@ const FORM_IDS = [
   "siege_pos","siege_h","lest_kg","lest_rep",
   "all_froid","all_chaud","avg_f","avd_f","arg_f","ard_f","avg_c","avd_c","arg_c","ard_c",
   "vis_l","vis_h","bougie",
-  "commentaires"
+  "commentaires","ressenti_libre"
 ];
 const LAP_IDS = [];
 for(let i=1;i<=15;i++){ for(let p=1;p<=4;p++){ LAP_IDS.push(`lap_${i}_${p}`); } }
@@ -621,6 +909,95 @@ function num(s){const n=parseFloat(String(s).replace(",","."));return isNaN(n)?n
 function fmt(n,d=2){return n==null?"—":Number(n).toLocaleString("fr-FR",{maximumFractionDigits:d,minimumFractionDigits:d})}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
 function setText(id,t){const el=document.getElementById(id);if(el)el.textContent=t}
+
+
+/* ===== COMBO : select + saisie libre ===== */
+// id = id du hidden input (valeur réelle)
+// id_sel = select, id_free = input texte, id_btn = bouton bascule
+function comboInit(id){
+  // Rien à faire, les oninput/onchange HTML gèrent tout
+}
+function comboSelChange(id){
+  const sel = document.getElementById(id+'_sel');
+  const free = document.getElementById(id+'_free');
+  const hidden = document.getElementById(id);
+  if(!sel||!hidden) return;
+  if(sel.value==='__free__'){
+    if(free){ free.classList.add('show'); sel.classList.add('hide'); }
+  } else {
+    hidden.value = sel.value;
+    if(['entree','sortie','freinage','probleme','rpm_max'].includes(id)) updateDiag();
+    saveForm();
+  }
+}
+function comboFreeChange(id){
+  const free = document.getElementById(id+'_free');
+  const hidden = document.getElementById(id);
+  if(!free||!hidden) return;
+  hidden.value = free.value;
+  if(['entree','sortie','freinage','probleme','rpm_max'].includes(id)) updateDiag();
+  saveForm();
+}
+function comboBtnClick(id){
+  const sel = document.getElementById(id+'_sel');
+  const free = document.getElementById(id+'_free');
+  const hidden = document.getElementById(id);
+  const btn = document.getElementById(id+'_btn');
+  if(!sel||!free) return;
+  const isFreeMod = free.classList.contains('show');
+  if(isFreeMod){
+    free.classList.remove('show');
+    sel.classList.remove('hide');
+    sel.value = '';
+    free.value = '';
+    if(hidden) hidden.value = '';
+    if(btn) btn.classList.remove('active');
+  } else {
+    free.classList.add('show');
+    sel.classList.add('hide');
+    sel.value = '__free__';
+    if(btn) btn.classList.add('active');
+    // Le tap sur le bouton est un vrai user gesture : focus() fonctionne sur iOS
+    setTimeout(()=>{ try{ free.focus(); }catch(e){} }, 50);
+  }
+  saveForm();
+}
+// Restaurer l'état combo depuis une valeur (appel depuis loadForm via setv)
+// setv() écrit dans le hidden input, mais il faut aussi mettre à jour le select visuel
+function comboRestore(id, val){
+  const sel = document.getElementById(id+'_sel');
+  const free = document.getElementById(id+'_free');
+  const btn = document.getElementById(id+'_btn');
+  if(!sel||!free) return;
+  if(!val){
+    sel.value=''; free.value=''; free.classList.remove('show'); sel.classList.remove('hide');
+    if(btn) btn.classList.remove('active');
+    return;
+  }
+  // Chercher si val est dans le select
+  const optVals = [...sel.options].map(o=>o.value).filter(v=>v&&v!=='__free__');
+  if(optVals.includes(val)){
+    sel.value=val; free.value=''; free.classList.remove('show'); sel.classList.remove('hide');
+    if(btn) btn.classList.remove('active');
+  } else {
+    sel.value='__free__'; free.value=val; free.classList.add('show'); sel.classList.add('hide');
+    if(btn) btn.classList.add('active');
+  }
+}
+
+/* ===== RAPPORT : calcul automatique ===== */
+function updateRapportCalc(){
+  const val = v('rapport');
+  const box = document.getElementById('rapport_calc');
+  if(!box) return;
+  if(!val){ box.style.display='none'; return; }
+  const m = val.match(/(\d+)\s*[x×\/:*]\s*(\d+)/i);
+  if(!m){ box.style.display='none'; return; }
+  const p=parseInt(m[1]), c=parseInt(m[2]);
+  if(!p||!c){ box.style.display='none'; return; }
+  box.style.display='block';
+  box.textContent='→ Rapport : '+(c/p).toFixed(3)+' ('+p+'×'+c+')';
+}
 
 /* ===== TABS ===== */
 function switchView(name){
@@ -700,6 +1077,9 @@ function loadForm(){
   try{
     const d = JSON.parse(raw);
     ALL_IDS.forEach(id => { if(d[id]!==undefined) setv(id,d[id]); });
+    // Restaurer l'état visuel des combos
+    const comboIds=['circuit','session','pilote','grip','entree','milieu','sortie','freinage','probleme','raidisseur','barre_av','pneu_type','jante_type','moyeux','voie_av'];
+    comboIds.forEach(id=>{ if(d[id]!==undefined) comboRestore(id,d[id]); });
     if(d.weather){ window._weather = d.weather; renderWeather(); }
   }catch(e){console.warn(e)}
 }
@@ -846,11 +1226,13 @@ function updatePressureDelta(){
       deltas.push(d);
       const sign = d>0?"+":"";
       el.textContent = `${sign}${d.toFixed(2)}`;
-      // Seuils KA100 : OK 0.10-0.30 bar, orange 0.30-0.40, rouge >0.40, bleu si baisse
+      // Seuils KA100 slick ligue : zone saine 150-300g (0.15-0.30 bar), orange 300-400g, rouge >400g
       el.className = "delta";
+      const dg = Math.round(d*1000); // en grammes
+      el.title = (d>=0?"+":"")+dg+"g";
       if(d > 0.40) el.classList.add("bad");
       else if(d > 0.30) el.classList.add("up");
-      else if(d >= 0) el.classList.add("ok");
+      else if(d >= 0.15) el.classList.add("ok");
       else el.classList.add("down");
     } else {
       el.textContent = "—";
@@ -862,10 +1244,11 @@ function updatePressureDelta(){
     const min = Math.min(...deltas);
     const moy = deltas.reduce((a,b)=>a+b,0)/4;
     let msgs = [];
-    if(moy<0.10) msgs.push('<span class="pill pill-info">Pneus pas montés en pression — temp piste froide ou pression départ trop haute</span>');
-    else if(moy<=0.30) msgs.push('<span class="pill pill-ok">Montée moyenne saine ('+moy.toFixed(2)+' bar)</span>');
-    else if(moy<=0.40) msgs.push('<span class="pill pill-warn">Montée forte ('+moy.toFixed(2)+' bar) — pression départ peut-être trop basse</span>');
-    else msgs.push('<span class="pill pill-bad">Surchauffe pneus ('+moy.toFixed(2)+' bar) — abaisser pression départ</span>');
+    const moyG = Math.round(moy*1000);
+    if(moy<0.10) msgs.push('<span class="pill pill-info">Δ faible ('+moyG+'g) — pneus froids ou pression départ élevée</span>');
+    else if(moy<=0.30) msgs.push('<span class="pill pill-ok">Montée saine ('+moyG+'g) — zone 150–300g ✓</span>');
+    else if(moy<=0.40) msgs.push('<span class="pill pill-warn">Montée élevée ('+moyG+'g) — surveiller, envisager +0.05 bar départ</span>');
+    else msgs.push('<span class="pill pill-bad">Surchauffe ('+moyG+'g) — abaisser pression départ</span>');
     if(max-min>0.15) msgs.push('<span class="pill pill-warn">Δ hétérogène entre roues — équilibre châssis à vérifier</span>');
     warn = msgs.join(" ");
   }
@@ -883,11 +1266,11 @@ function updateDiag(){
   if(!p){
     if(rpmMax!=null && rpmMax<14800) p="RPM trop bas";
     else if(rpmMax!=null && rpmMax>15300) p="RPM trop haut";
-    else if(sortie==="Glisse") p="Sortie glisse";
-    else if(sortie==="Molle") p="Sortie molle";
-    else if(entree==="Pousse") p="Ne tourne pas";
-    else if(entree==="Trop agressif") p="Survirage";
-    else if(freinage==="Instable") p="Freinage instable";
+    else if(sortie==="Glisse" || sortie.includes("patine") || sortie.includes("Glisse")) p="Sortie glisse";
+    else if(sortie==="Molle" || sortie.includes("relance") || sortie.includes("Molle")) p="Sortie molle";
+    else if(entree==="Pousse" || entree.includes("virage") || entree.includes("Pousse")) p="Ne tourne pas";
+    else if(entree==="Trop agressif" || entree.includes("agressif") || entree.includes("Survirage")) p="Survirage";
+    else if(freinage==="Instable" || freinage.includes("Instable") || freinage.includes("côté")) p="Freinage instable";
   }
   const map = {
     "Sortie glisse":["Traction faible / trop d'avant","AR +5 mm ou calmer l'avant"],
@@ -896,7 +1279,11 @@ function updateDiag(){
     "Survirage":["Avant trop agressif","AR +5 mm ou chasse -1"],
     "Freinage instable":["Répartition / transfert / avant chargé","Vérifier siège et équilibre au freinage"],
     "RPM trop bas":["Rapport trop long","+ dents couronne (ou - dents pignon)"],
-    "RPM trop haut":["Rapport trop court","- dents couronne (ou + dents pignon)"]
+    "RPM trop haut":["Rapport trop court","- dents couronne (ou + dents pignon)"],
+    "Sous-virage":["Avant manque de mordant / AR trop rigide","Desserrer AR, réduire voie AV, barre carbone"],
+    "Kart lent partout":["Rapport, carburation ou châssis","Vérifier démultiplication + EGT"],
+    "Problème moteur":["Carburation, usure ou casse","Vérifier EGT, CHT, bougie, compression"],
+    "Problème frein":["Étrier, plaquettes ou câble","Inspecter avant de repartir"]
   };
   setText("cause", map[p]?map[p][0]:"");
   setText("action", map[p]?map[p][1]:"");
@@ -1322,7 +1709,7 @@ async function parseAlfano(ev){
     }
     if(imported.pilote){
       const p = imported.pilote.charAt(0).toUpperCase()+imported.pilote.slice(1).toLowerCase();
-      if(["Hugo","Jaouen","Louka"].includes(p)) applyOrConflict("pilote", p, "Pilote");
+      if(p.length>1) applyOrConflict("pilote", p, "Pilote"); // accepte tout pilote Alfano
     }
     if(imported.date) applyOrConflict("date", imported.date, "Date");
     if(imported.heure) applyOrConflict("heure", imported.heure, "Heure");
@@ -1458,15 +1845,9 @@ function copyCSV(){
 }
 
 function exportPDF(){
-  // S'assurer d'être sur l'onglet Fiche pour l'impression
   switchView("fiche");
-  setTimeout(() => {
-    try {
-      window.print();
-    } catch(e) {
-      alert("Impression non disponible. Utilise Partager → Imprimer.");
-    }
-  }, 300);
+  document.querySelectorAll(".collapsible.collapsed").forEach(el=>el.classList.remove("collapsed"));
+  setTimeout(()=>{ try{ window.print(); }catch(e){ alert("Utilise Partager → Imprimer."); } }, 400);
 }
 
 /* ===== HISTORIQUE ===== */
@@ -1518,6 +1899,9 @@ function loadRun(id){
   ALL_IDS.forEach(clearField);
   // Charger les valeurs primitives du run dans le formulaire
   ALL_IDS.forEach(k => { if(r[k]!==undefined) setv(k,r[k]); });
+  // Restaurer l'état visuel des combos
+  const _comboIds=['circuit','session','pilote','grip','entree','milieu','sortie','freinage','probleme','raidisseur','barre_av','pneu_type','jante_type','moyeux','voie_av'];
+  _comboIds.forEach(id=>{ if(r[id]!==undefined) comboRestore(id,r[id]); });
   // Météo : deep copy explicite
   if(r.weather){
     try { window._weather = JSON.parse(JSON.stringify(r.weather)); }
@@ -1787,11 +2171,11 @@ function resetChecks(which){
 
 /* ===== MIGRATION v7/v8/v9 → v10 ===== */
 function migrateFromOldVersions(){
-  const oldKeys = ["fiche_karting_local_v7","fiche_karting_local_v8","fiche_karting_local_v9","fiche_karting_v9_form"];
-  const migrated = localStorage.getItem("fiche_karting_v10_migrated");
+  const oldKeys = ["fiche_karting_local_v7","fiche_karting_local_v8","fiche_karting_local_v9","fiche_karting_v9_form","fiche_karting_v10_form"];
+  const migrated = localStorage.getItem("fiche_karting_v11_migrated");
   if(migrated) return;
   // Si on a déjà des données v10, on ne migre pas
-  if(localStorage.getItem(STORAGE_FORM)){ localStorage.setItem("fiche_karting_v10_migrated","1"); return; }
+  if(localStorage.getItem(STORAGE_FORM)){ localStorage.setItem("fiche_karting_v11_migrated","1"); return; }
   for(const key of oldKeys){
     const raw = localStorage.getItem(key);
     if(!raw) continue;
@@ -1811,12 +2195,85 @@ function migrateFromOldVersions(){
         merged[newKey] = old[k];
       });
       localStorage.setItem(STORAGE_FORM, JSON.stringify(merged));
-      localStorage.setItem("fiche_karting_v10_migrated","1");
+      localStorage.setItem("fiche_karting_v11_migrated","1");
       console.log(`Migrated from ${key}`);
       return;
     }catch(e){console.warn("Migration error:",e)}
   }
-  localStorage.setItem("fiche_karting_v10_migrated","1");
+  localStorage.setItem("fiche_karting_v11_migrated","1");
+}
+
+
+/* ===== EXPORT WORD ===== */
+function exportWeekendWord(){
+  const runs=getRuns();
+  if(!runs.length){alert("Aucun run.");return;}
+  let d=`<html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;font-size:10pt;margin:2cm}h1{font-size:14pt;color:#1a56db}h2{font-size:11pt;border-bottom:1px solid #ccc;padding-bottom:2pt}table{border-collapse:collapse;width:100%;font-size:8.5pt}th{background:#1a56db;color:#fff;padding:3pt 5pt;text-align:left}td{padding:2pt 5pt;border-bottom:1px solid #eee}tr:nth-child(even)td{background:#f9f9f9}</style></head><body>`;
+  d+=`<h1>Rapport Karting EVOMEKA — ${new Date().toLocaleDateString("fr-FR")}</h1><p>${runs.length} run(s)</p>`;
+  d+=`<h2>Récapitulatif</h2><table><thead><tr><th>Circuit</th><th>Session</th><th>Date</th><th>Pilote</th><th>Meilleur</th><th>Moy.</th><th>σ</th><th>RPM</th><th>EGT H</th><th>EGT L</th><th>Voie AV</th><th>Voie AR</th><th>Rapport</th><th>Raidisseur</th></tr></thead><tbody>`;
+  const g=k=>r=>String(r[k]||"").replace(/;/g,",");
+  runs.forEach(r=>{d+=`<tr><td>${r.circuit||""}</td><td>${r.session||""}</td><td>${r.date||""}</td><td>${r.pilote||""}</td><td>${r.best_lap||""}</td><td>${r.avg_lap||""}</td><td>${r.std_lap||""}</td><td>${r.rpm_max||""}</td><td>${r.egt_haut||""}</td><td>${r.egt_bas||""}</td><td>${r.voie_av||""}</td><td>${r.voie_ar||""}</td><td>${r.rapport||""}</td><td>${r.raidisseur||""}</td></tr>`;});
+  d+=`</tbody></table>`;
+  runs.forEach((r,i)=>{
+    if(!r.commentaires&&!r.ressenti_libre&&!r.probleme) return;
+    d+=`<h2>Run ${i+1} — ${r.circuit||"?"} · ${r.session||"?"} · ${r.date||""}</h2>`;
+    if(r.probleme) d+=`<p><b>Problème :</b> ${r.probleme}${r.action_testee?" → "+r.action_testee:""}</p>`;
+    if(r.ressenti_libre) d+=`<p><b>Ressenti pilote :</b> ${r.ressenti_libre}</p>`;
+    if(r.commentaires) d+=`<p><b>Commentaires :</b> ${r.commentaires}</p>`;
+  });
+  d+=`</body></html>`;
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([d],{type:"application/msword"}));
+  a.download=`karting-rapport-${new Date().toISOString().slice(0,10)}.doc`;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+/* ===== EXPORT EXCEL (CSV) ===== */
+function exportWeekendExcel(){
+  const runs=getRuns();
+  if(!runs.length){alert("Aucun run.");return;}
+  const sep=";";
+  const H=["Circuit","Session","Date","Heure","Pilote","Grip","Meilleur tour","Tour moyen","σ","RPM max","RPM mini","EGT haut","EGT bas","CHT","T° piste","Voie AV","Voie AR","Raidisseur","Rapport","Axe AR h","Axe AR l","Axe bridé","Barre AV","Lest kg","Rép. lest","P AVG froid","P AVD froid","P ARG froid","P ARD froid","P AVG chaud","P AVD chaud","P ARG chaud","P ARD chaud","Problème","Action testée","Entrée","Milieu","Sortie","Freinage","Ressenti libre","Commentaires","Vis L","Vis H","T° air","Humidité","Vent km/h","Pression hPa","Densité air"];
+  const g=(r,k)=>String(r[k]||"").replace(/;/g,",").replace(/[\r\n]/g," ");
+  const rows=runs.map(r=>[g(r,"circuit"),g(r,"session"),g(r,"date"),g(r,"heure"),g(r,"pilote"),g(r,"grip"),g(r,"best_lap"),g(r,"avg_lap"),g(r,"std_lap"),g(r,"rpm_max"),g(r,"rpm_sortie"),g(r,"egt_haut"),g(r,"egt_bas"),g(r,"cht"),g(r,"temp_piste"),g(r,"voie_av"),g(r,"voie_ar"),g(r,"raidisseur"),g(r,"rapport"),g(r,"axe_h"),g(r,"axe_l"),g(r,"axe_bride"),g(r,"barre_av"),g(r,"lest_kg"),g(r,"lest_rep"),g(r,"avg_f"),g(r,"avd_f"),g(r,"arg_f"),g(r,"ard_f"),g(r,"avg_c"),g(r,"avd_c"),g(r,"arg_c"),g(r,"ard_c"),g(r,"probleme"),g(r,"action_testee"),g(r,"entree"),g(r,"milieu"),g(r,"sortie"),g(r,"freinage"),g(r,"ressenti_libre"),g(r,"commentaires"),g(r,"vis_l"),g(r,"vis_h"),r.weather?String(r.weather.temp??""):"",r.weather?String(r.weather.hum??""):"",r.weather?String(Math.round(r.weather.wind??0)):"",r.weather?String(Math.round(r.weather.pres??0)):"",r.weather?String((r.weather.density||0).toFixed(4)):""].join(sep));
+  const csv="\uFEFF"+H.join(sep)+"\n"+rows.join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=`karting-export-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+/* ===== RÉSUMÉ IA ===== */
+async function generateWeekendSummary(){
+  const box=document.getElementById("weekend_summary_box");
+  const btn=document.getElementById("weekend_summary_btn");
+  const runs=getRuns();
+  if(!runs.length){box.innerHTML='<div class="alert alert-warn">Aucun run sauvegardé.</div>';return;}
+  box.innerHTML='<div class="alert" style="background:#1e293b"><span class="pill pill-info">⏳ Analyse IA en cours...</span></div>';
+  if(btn) btn.disabled=true;
+  const txt=runs.slice(0,20).map((r,i)=>[
+    `Run ${i+1}: ${r.circuit||"?"} · ${r.session||"?"} · ${r.date||"?"}  Pilote: ${r.pilote||"?"}`,
+    `  Chrono: best=${r.best_lap||"?"} moy=${r.avg_lap||"?"} σ=${r.std_lap||"?"}`,
+    `  RPM max=${r.rpm_max||"?"} sortie=${r.rpm_sortie||"?"}  EGT H=${r.egt_haut||"?"} L=${r.egt_bas||"?"} CHT=${r.cht||"?"}`,
+    `  Voie AV=${r.voie_av||"?"} AR=${r.voie_ar||"?"}  Raidisseur=${r.raidisseur||"?"}  Rapport=${r.rapport||"?"}`,
+    `  Entrée=${r.entree||"?"} Milieu=${r.milieu||"?"} Sortie=${r.sortie||"?"} Freinage=${r.freinage||"?"}`,
+    `  Problème=${r.probleme||"?"} Action=${r.action_testee||"?"}`,
+    `  P pneus: AVG ${r.avg_f||"?"}→${r.avg_c||"?"} ARG ${r.arg_f||"?"}→${r.arg_c||"?"}`,
+    r.ressenti_libre?`  Ressenti: ${r.ressenti_libre}`:"",
+    r.commentaires?`  Commentaires: ${r.commentaires}`:""
+  ].filter(Boolean).join("\n")).join("\n\n");
+  const prompt=`Tu es expert karting KA100/Rotax. Analyse ces ${runs.length} runs et donne en français:\n1. Résumé chronos et progression\n2. Analyse carburation (EGT/CHT) et réglages châssis (voie, raidisseur, rapport)\n3. Problèmes récurrents et causes\n4. 3-5 actions concrètes prioritaires\n5. Conseils pour les prochains circuits\n\nSois précis, technique, concis. Cite les valeurs.\n\nDONNÉES:\n${txt}`;
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+    const json=await resp.json();
+    const text=(json.content||[]).map(c=>c.text||"").join("").trim();
+    if(!text) throw new Error("Réponse vide");
+    const h=text.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/^#{1,3}\s+(.+)$/gm,'<h3 style="margin:8px 0 3px;font-size:13px;color:#86efac">$1</h3>').replace(/^[\-\d]+\.?\s+/gm,"<br>• ").replace(/\n/g,"<br>");
+    box.innerHTML=`<div class="diag" style="font-size:13px;line-height:1.5">${h}</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn1" type="button" onclick="exportPDF()" style="background:#7c3aed;min-height:36px;font-size:12px">PDF</button><button class="btn2" type="button" onclick="exportWeekendWord()" style="min-height:36px;font-size:12px">Word</button><button class="btn2" type="button" onclick="exportWeekendExcel()" style="min-height:36px;font-size:12px">Excel</button></div>`;
+  }catch(e){
+    box.innerHTML=`<div class="alert alert-bad">❌ ${e.message}</div>`;
+  }
+  if(btn) btn.disabled=false;
 }
 
 /* ===== INIT ===== */
@@ -1833,6 +2290,8 @@ function init(){
   renderChecklists();
   updateHistCount();
   updateSaveButtonLabel();
+  updateRapportCalc();
+  document.getElementById('rapport')?.addEventListener('input', updateRapportCalc);
   ["probleme","rpm_max","entree","sortie","freinage"].forEach(id=>{
     const el=document.getElementById(id);
     if(el){ el.addEventListener("change",updateDiag); el.addEventListener("input",updateDiag); }
