@@ -688,6 +688,7 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
       <h2>Résumé & analyse (IA)</h2>
       <p class="small">Analyse de tous les runs : progression, réglages, carburation, conseils pour les prochains circuits.</p>
       <button id="weekend_summary_btn" class="btn1" type="button" onclick="generateWeekendSummary()" style="background:#7c3aed;margin-bottom:10px">🤖 Générer l'analyse</button>
+      <button type="button" onclick="clearGroqKey()" style="background:none;border:none;color:#64748b;font-size:11px;padding:0;cursor:pointer;min-height:auto;font-weight:400">🔑 Changer la clé API</button>
       <div id="weekend_summary_box"></div>
     </div>
   </div>
@@ -2421,20 +2422,37 @@ Patterns dans les ressentis et problèmes déclarés. Causes probables.
 DONNÉES JSON :
 ${JSON.stringify(runsData, null, 1)}`;
 
+  // Clé Groq stockée en localStorage (jamais dans le code source)
+  const groqKey = localStorage.getItem("groq_api_key")||"";
+  if(!groqKey){
+    box.innerHTML=`<div class="alert alert-warn">
+      🔑 <strong>Clé API Groq manquante</strong><br>
+      <div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input id="groq_key_input" type="password" placeholder="gsk_..." style="flex:1;min-width:180px;font-size:13px;min-height:40px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;padding:0 10px">
+        <button class="btn1" onclick="saveGroqKey()" style="min-height:40px;font-size:13px">Enregistrer</button>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:6px">Crée une clé gratuite sur console.groq.com · Elle est stockée uniquement sur cet appareil.</div>
+    </div>`;
+    if(btn) btn.disabled=false;
+    return;
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(()=>controller.abort(), 25000);
 
   try{
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST", headers: {"Content-Type":"application/json"}, signal: controller.signal,
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1500,
-        system: systemPrompt, messages: [{role:"user", content:userPrompt}] })
+    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {"Content-Type":"application/json", "Authorization":"Bearer "+groqKey},
+      signal: controller.signal,
+      body: JSON.stringify({ model: "llama-3.3-70b-versatile", max_tokens: 1500,
+        messages: [{role:"system", content:systemPrompt}, {role:"user", content:userPrompt}] })
     });
     clearTimeout(timeoutId);
     if(!resp.ok){ const e=await resp.json().catch(()=>({})); throw new Error(e?.error?.message||`HTTP ${resp.status}`); }
     const json = await resp.json();
     if(json.error) throw new Error(json.error.message||"Erreur API");
-    const text = (json.content||[]).map(c=>c.text||"").join("").trim();
+    const text = (json.choices||[]).map(c=>c.message?.content||"").join("").trim();
     if(!text) throw new Error("Réponse vide — réessaie dans quelques secondes");
     const h = text
       .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
@@ -2457,6 +2475,21 @@ ${JSON.stringify(runsData, null, 1)}`;
 
 
 
+
+
+/* ===== GROQ API KEY ===== */
+function saveGroqKey(){
+  const input = document.getElementById("groq_key_input");
+  if(!input) return;
+  const key = input.value.trim();
+  if(!key.startsWith("gsk_")){ alert("Clé invalide — elle doit commencer par gsk_"); return; }
+  localStorage.setItem("groq_api_key", key);
+  generateWeekendSummary();
+}
+function clearGroqKey(){
+  localStorage.removeItem("groq_api_key");
+  alert("Clé supprimée.");
+}
 
 /* ===== SURPRISE 3 : AIDE CONTEXTUELLE EGT INLINE ===== */
 function showEgtTip(vis){
