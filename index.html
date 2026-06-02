@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Karting">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Fiche karting v11</title>
+<title>Fiche karting v12</title>
 <style>
 :root{--bg:#0f172a;--panel:#111827;--panel2:#1f2937;--line:#334155;--text:#e5e7eb;--muted:#94a3b8;--blue:#2563eb;--green:#15803d;--orange:#c2410c;--red:#7f1d1d}
 *{box-sizing:border-box}
@@ -167,7 +167,7 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
 <body>
 <div class="wrap">
   <div class="section topcard">
-    <h1>Fiche karting v11</h1>
+    <h1>Fiche karting v12</h1>
     <p class="sub">Fiche · Histo · Comparatif · Outils · Météo auto · Import Alfano</p>
     <div id="edit_banner" style="display:none;background:#1e3a8a;color:#bfdbfe;padding:8px 12px;border-radius:10px;margin-top:8px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px">
       <span>✏️ Édition d'un run existant. <strong>Sauver</strong> = mise à jour.</span>
@@ -321,8 +321,8 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
         <div><label>RPM sortie virage lent</label><input id="rpm_sortie" inputmode="numeric" placeholder="Ex : 6000"></div>
         <div><label>Vitesse maxi (km/h)</label><input id="speed_max" inputmode="decimal" placeholder="Ex : 103"></div>
         <div><label>Vitesse mini (km/h)</label><input id="speed_min" inputmode="decimal" placeholder="Ex : 47"></div>
-        <div><label>EGT bas (vis L) °C</label><input id="egt_bas" inputmode="decimal" placeholder="Cible 380-440"></div>
-        <div><label>EGT haut (vis H) °C</label><input id="egt_haut" inputmode="decimal" placeholder="Cible 620-680"></div>
+        <div><label>EGT bas (vis L) °C <button type="button" onclick="showEgtTip('L')" style="background:none;border:1px solid #334155;border-radius:6px;color:#94a3b8;font-size:10px;min-height:20px;padding:0 5px;margin-left:4px;font-weight:700;cursor:pointer">?</button></label><input id="egt_bas" inputmode="decimal" placeholder="Cible 380-440"></div>
+        <div><label>EGT haut (vis H) °C <button type="button" onclick="showEgtTip('H')" style="background:none;border:1px solid #334155;border-radius:6px;color:#94a3b8;font-size:10px;min-height:20px;padding:0 5px;margin-left:4px;font-weight:700;cursor:pointer">?</button></label><input id="egt_haut" inputmode="decimal" placeholder="Cible 620-680"></div>
         <div><label>CHT culasse (°C)</label><input id="cht" inputmode="decimal" placeholder="Ex : 180"></div>
       </div>
       <p class="small" style="margin:8px 0 0">Une seule sonde EGT sur le pot KA100, deux lectures : <strong>bas</strong> en sortie de virage lent (pilote vis L), <strong>haut</strong> en bout de ligne droite (pilote vis H).</p>
@@ -633,6 +633,7 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
           </div>
         </div>
         <div id="pressure_warn" style="margin-top:10px;text-align:center"></div>
+        <div id="pressure_trend_alert" class="alert alert-warn" style="display:none;margin-top:8px;font-size:12px"></div>
       </div>
     </div>
 
@@ -673,6 +674,7 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
       <h2>Historique des runs</h2>
       <input id="hist_search" placeholder="Rechercher : circuit, pilote, date..." oninput="renderHistory()" style="margin-bottom:10px">
       <p class="small" id="hist_help">Tape sur 1 ou 2 runs pour les sélectionner, puis va dans l'onglet Comp.</p>
+      <div id="progression_chart" style="margin-bottom:10px"></div>
       <div id="hist_list"></div>
       <hr>
       <div class="grid">
@@ -817,9 +819,9 @@ hr{border:0;border-top:1px solid rgba(148,163,184,.15);margin:12px 0}
 
 <script>
 /* ===== CONSTANTES ===== */
-const STORAGE_FORM = "fiche_karting_v11_form";
-const STORAGE_RUNS = "fiche_karting_v11_runs";
-const VERSION = "v11";
+const STORAGE_FORM = "fiche_karting_v12_form";
+const STORAGE_RUNS = "fiche_karting_v12_runs";
+const VERSION = "v12";
 
 const CIRCUITS_GPS = {
   "Aigues-Vives": {lat:43.0075, lon:1.8836, label:"Le Kart'Are - Aigues-Vives (09)"},
@@ -909,6 +911,24 @@ function num(s){const n=parseFloat(String(s).replace(",","."));return isNaN(n)?n
 function fmt(n,d=2){return n==null?"—":Number(n).toLocaleString("fr-FR",{maximumFractionDigits:d,minimumFractionDigits:d})}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
 function setText(id,t){const el=document.getElementById(id);if(el)el.textContent=t}
+
+/* ===== DEBOUNCE & IDLE SAVE ===== */
+function debounce(fn, ms){
+  let t;
+  return function(...args){
+    clearTimeout(t);
+    t = setTimeout(()=>fn.apply(this,args), ms);
+  };
+}
+// Autosave avec idle callback sur iOS (évite freeze UI sur textarea blur)
+function saveFormIdle(){
+  if(typeof requestIdleCallback !== 'undefined'){
+    requestIdleCallback(()=>saveForm(), {timeout:800});
+  } else {
+    setTimeout(saveForm, 50);
+  }
+}
+
 
 
 /* ===== COMBO : select + saisie libre ===== */
@@ -1020,7 +1040,7 @@ function buildLaps(){
   for(let i=1;i<=15;i++){
     html += `<div class="lap-row">
       <div class="lap-num">${i}</div>
-      <input id="lap_${i}_1" inputmode="decimal" placeholder="Tour" oninput="updateLapStats();saveForm()">
+      <input id="lap_${i}_1" inputmode="decimal" placeholder="Tour" oninput="updateLapStatsDebounced();saveFormDebounced()">
       <input id="lap_${i}_2" inputmode="decimal" placeholder="P1" oninput="saveForm()">
       <input id="lap_${i}_3" inputmode="decimal" placeholder="P2" class="partial-extra" oninput="saveForm()">
       <input id="lap_${i}_4" inputmode="decimal" placeholder="P3" class="partial-extra" oninput="saveForm()">
@@ -1083,20 +1103,26 @@ function loadForm(){
     if(d.weather){ window._weather = d.weather; renderWeather(); }
   }catch(e){console.warn(e)}
 }
+// getRuns() : deep copy — à utiliser UNIQUEMENT quand on va muter le résultat (saveRun, loadRun, importJSON)
+// getRunsRO() : lecture seule — renderHistory, renderCompare, exports, IA (perf mobile)
 function getRuns(){
-  // Retourne TOUJOURS des deep copies pour qu'aucune mutation accidentelle
-  // d'un run en mémoire ne se propage à l'historique sauvé
   try{
     const raw = localStorage.getItem(STORAGE_RUNS) || "[]";
     const arr = JSON.parse(raw);
     if(!Array.isArray(arr)) return [];
-    // Deep copy via stringify/parse (suffit pour des objets sans Date/RegExp)
     return JSON.parse(JSON.stringify(arr));
+  }catch(e){return []}
+}
+function getRunsRO(){
+  try{
+    const raw = localStorage.getItem(STORAGE_RUNS) || "[]";
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
   }catch(e){return []}
 }
 function setRuns(arr){ localStorage.setItem(STORAGE_RUNS, JSON.stringify(arr)); updateHistCount(); }
 function updateHistCount(){
-  const n = getRuns().length;
+  const n = getRunsRO().length;
   setText("hist-count", n?`(${n})`:"");
 }
 function saveRun(){
@@ -1254,7 +1280,39 @@ function updatePressureDelta(){
   }
   const wEl = document.getElementById("pressure_warn");
   if(wEl) wEl.innerHTML = warn;
+  checkPressureTrends();
 }
+
+/* ===== SURPRISE 2 : ALERTE TENDANCE PRESSIONS (3+ runs même circuit) ===== */
+function checkPressureTrends(){
+  const box = document.getElementById("pressure_trend_alert");
+  if(!box) return;
+  const circuit = v("circuit");
+  if(!circuit){ box.style.display="none"; return; }
+  const allRuns = getRunsRO().filter(r=>r.circuit===circuit && r.avg_f && r.avg_c);
+  if(allRuns.length < 3){ box.style.display="none"; return; }
+  const recent = allRuns.slice(-5);
+  const wheels = [
+    {k:"avg", label:"AVG"}, {k:"avd", label:"AVD"},
+    {k:"arg", label:"ARG"}, {k:"ard", label:"ARD"}
+  ];
+  const alerts = [];
+  wheels.forEach(({k,label})=>{
+    const deltas = recent.map(r=>{
+      const f=parseFloat(r[k+"_f"]), c=parseFloat(r[k+"_c"]);
+      return (!isNaN(f)&&!isNaN(c)) ? c-f : null;
+    }).filter(x=>x!=null);
+    if(deltas.length < 3) return;
+    const avg = deltas.reduce((a,b)=>a+b,0)/deltas.length;
+    const avgG = Math.round(avg*1000);
+    if(avgG > 320) alerts.push(`<span class="pill pill-warn">${label} Δ moy ${avgG}g sur ${deltas.length} runs — envisager +0.05 bar départ</span>`);
+    else if(avgG < 100) alerts.push(`<span class="pill pill-info">${label} Δ moy ${avgG}g — pneus peu sollicités ou départ trop chargé</span>`);
+  });
+  if(!alerts.length){ box.style.display="none"; return; }
+  box.style.display="block";
+  box.innerHTML = `<div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px">📊 Tendance pressions · ${circuit} (${recent.length} derniers runs)</div>${alerts.join(" ")}`;
+}
+
 
 /* ===== DIAG ===== */
 function updateDiag(){
@@ -1764,14 +1822,14 @@ async function parseAlfano(ev){
       const editId = window._currentRunId;
       let editLabel = "(nouveau run — aucun run existant ne sera modifié)";
       if(editId){
-        const editRun = getRuns().find(r => r.id === editId);
+        const editRun = getRunsRO().find(r => r.id === editId);
         if(editRun){
           editLabel = `<strong>${editRun.circuit||"?"} · ${editRun.session||"?"} · ${editRun.date||"?"}</strong>`;
         } else {
           editLabel = "(run inconnu)";
         }
       }
-      const totalRuns = getRuns().length;
+      const totalRuns = getRunsRO().length;
       html += `<div class="alert" style="margin-bottom:8px;background:#1e293b;border:1px solid var(--line);font-size:12px;color:#cbd5e1">
         🔎 <strong>Cible de l'import :</strong> ${editLabel}<br>
         Historique : ${totalRuns} runs sauvés. Seuls les champs du formulaire sont écrits, les autres runs ne sont pas touchés tant que tu n'appuies pas sur MAJ.
@@ -1852,13 +1910,80 @@ function exportPDF(){
 
 /* ===== HISTORIQUE ===== */
 let _selected = new Set();
+/* ===== SURPRISE 1 : MINI GRAPHIQUE DE PROGRESSION ===== */
+function renderProgressionChart(runs){
+  const box = document.getElementById("progression_chart");
+  if(!box) return;
+  const withTimes = runs.map(r=>({
+    label: (r.circuit||"?").slice(0,10)+" "+(r.date||"").slice(5),
+    t: parseLap((r.best_lap||"").replace(/[^\d:.,]/g,""))
+  })).filter(x=>x.t!=null);
+  if(withTimes.length < 2){ box.innerHTML=""; return; }
+  const min = Math.min(...withTimes.map(x=>x.t));
+  const max = Math.max(...withTimes.map(x=>x.t));
+  const range = max - min || 1;
+  const W = 280, H = 60, PAD = 6;
+  const pts = withTimes.map((x,i)=>{
+    const cx = PAD + (i/(withTimes.length-1||1))*(W-PAD*2);
+    const cy = H - PAD - ((x.t - min)/range)*(H - PAD*2);
+    return {cx, cy, label: x.label, t: x.t};
+  });
+  const polyline = pts.map(p=>`${p.cx},${p.cy}`).join(" ");
+  const best = pts.reduce((a,b)=>a.cy>b.cy?a:b); // highest cy = slowest, lowest = fastest
+  const fastPt = pts.reduce((a,b)=>a.t<b.t?a:b);
+  const dots = pts.map((p,i)=>`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${p===fastPt?5:3}" fill="${p===fastPt?"#22c55e":"#3b82f6"}" opacity="0.9"><title>${p.label} : ${fmtLap(p.t)}</title></circle>`).join("");
+  box.innerHTML = `<div style="background:#0b1220;border:1px solid rgba(148,163,184,.15);border-radius:10px;padding:8px 10px">
+    <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📈 Progression best lap (${withTimes.length} runs)</div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
+      <polyline points="${polyline}" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linejoin="round" opacity="0.6"/>
+      ${dots}
+      <text x="${fastPt.cx.toFixed(1)}" y="${(fastPt.cy-8).toFixed(1)}" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">${fmtLap(fastPt.t)}</text>
+    </svg>
+    <div style="font-size:11px;color:#94a3b8;margin-top:2px">🟢 meilleur · 🔵 autres · survole un point pour le détail</div>
+  </div>`;
+}
+
+/* ===== SURPRISE 1 : MINI GRAPHIQUE DE PROGRESSION ===== */
+function renderProgressionChart(runs){
+  const box = document.getElementById("progression_chart");
+  if(!box) return;
+  const withTimes = runs.map(r=>({
+    label: (r.circuit||"?").slice(0,12)+" "+(r.date||"").slice(5),
+    t: parseLap((r.best_lap||"").replace(/[^\d:.,]/g,""))
+  })).filter(x=>x.t!=null);
+  if(withTimes.length < 2){ box.innerHTML=""; return; }
+  const min = Math.min(...withTimes.map(x=>x.t));
+  const max = Math.max(...withTimes.map(x=>x.t));
+  const range = max - min || 1;
+  const W=280, H=60, PAD=8;
+  const pts = withTimes.map((x,i)=>({
+    cx: PAD+(i/(withTimes.length-1||1))*(W-PAD*2),
+    cy: H-PAD-((x.t-min)/range)*(H-PAD*2),
+    label: x.label, t: x.t
+  }));
+  const polyline = pts.map(p=>`${p.cx.toFixed(1)},${p.cy.toFixed(1)}`).join(" ");
+  const fastPt = pts.reduce((a,b)=>a.t<b.t?a:b);
+  const dots = pts.map(p=>`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${p===fastPt?5:3}" fill="${p===fastPt?"#22c55e":"#3b82f6"}" opacity="0.85"><title>${p.label} : ${fmtLap(p.t)}</title></circle>`).join("");
+  box.innerHTML = `<div style="background:#0b1220;border:1px solid rgba(148,163,184,.15);border-radius:10px;padding:8px 10px;margin-bottom:8px">
+    <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">📈 Progression best lap · ${withTimes.length} runs</div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;overflow:visible">
+      <polyline points="${polyline}" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linejoin="round" opacity="0.5"/>
+      ${dots}
+      <text x="${fastPt.cx.toFixed(1)}" y="${(fastPt.cy-8).toFixed(1)}" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">${fmtLap(fastPt.t)}</text>
+    </svg>
+    <div style="font-size:10px;color:#64748b;margin-top:2px">🟢 meilleur  🔵 autres  · survole un point pour le détail</div>
+  </div>`;
+}
+
 function renderHistory(){
   const list = document.getElementById("hist_list");
   const q = (document.getElementById("hist_search").value||"").toLowerCase();
-  const runs = getRuns().filter(r=>{
+  const runs = getRunsRO().filter(r=>{
     if(!q) return true;
     return [r.circuit,r.pilote,r.session,r.date,r.commentaires].some(x=>String(x||"").toLowerCase().includes(q));
   });
+  renderProgressionChart(runs);
+  renderProgressionChart(runs);
   if(!runs.length){ list.innerHTML='<p class="small">Aucun run sauvegardé.</p>'; return; }
   list.innerHTML = runs.map(r=>{
     const sel = _selected.has(r.id);
@@ -1936,7 +2061,7 @@ function deleteRun(id){
   renderHistory();
 }
 function exportJSON(){
-  const data = { version:VERSION, exported:new Date().toISOString(), runs:getRuns() };
+  const data = { version:VERSION, exported:new Date().toISOString(), runs:getRunsRO() };
   const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -2017,7 +2142,7 @@ function renderCompare(){
   }
   empty.style.display="none";
   const ids = [..._selected];
-  const runs = getRuns();
+  const runs = getRunsRO();
   const r1 = runs.find(x=>x.id===ids[0]);
   const r2 = runs.find(x=>x.id===ids[1]);
   if(!r1||!r2){ tbl.innerHTML='<p class="small">Run introuvable.</p>'; return; }
@@ -2171,11 +2296,17 @@ function resetChecks(which){
 
 /* ===== MIGRATION v7/v8/v9 → v10 ===== */
 function migrateFromOldVersions(){
-  const oldKeys = ["fiche_karting_local_v7","fiche_karting_local_v8","fiche_karting_local_v9","fiche_karting_v9_form","fiche_karting_v10_form"];
-  const migrated = localStorage.getItem("fiche_karting_v11_migrated");
+  const oldKeys = ["fiche_karting_local_v7","fiche_karting_local_v8","fiche_karting_local_v9","fiche_karting_v9_form","fiche_karting_v10_form","fiche_karting_v11_form"];
+  const migrated = localStorage.getItem("fiche_karting_v12_migrated");
   if(migrated) return;
-  // Si on a déjà des données v10, on ne migre pas
-  if(localStorage.getItem(STORAGE_FORM)){ localStorage.setItem("fiche_karting_v11_migrated","1"); return; }
+  // Migration des runs v11 → v12 (clé storage renommée)
+  const v11runs = localStorage.getItem("fiche_karting_v11_runs");
+  if(v11runs && !localStorage.getItem("fiche_karting_v12_runs")){
+    localStorage.setItem("fiche_karting_v12_runs", v11runs);
+    console.log("Runs migrés v11→v12");
+  }
+  // Si on a déjà des données v12, on ne migre pas le formulaire
+  if(localStorage.getItem(STORAGE_FORM)){ localStorage.setItem("fiche_karting_v12_migrated","1"); return; }
   for(const key of oldKeys){
     const raw = localStorage.getItem(key);
     if(!raw) continue;
@@ -2195,18 +2326,18 @@ function migrateFromOldVersions(){
         merged[newKey] = old[k];
       });
       localStorage.setItem(STORAGE_FORM, JSON.stringify(merged));
-      localStorage.setItem("fiche_karting_v11_migrated","1");
+      localStorage.setItem("fiche_karting_v12_migrated","1");
       console.log(`Migrated from ${key}`);
       return;
     }catch(e){console.warn("Migration error:",e)}
   }
-  localStorage.setItem("fiche_karting_v11_migrated","1");
+  localStorage.setItem("fiche_karting_v12_migrated","1");
 }
 
 
 /* ===== EXPORT WORD ===== */
 function exportWeekendWord(){
-  const runs=getRuns();
+  const runs=getRunsRO();
   if(!runs.length){alert("Aucun run.");return;}
   let d=`<html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;font-size:10pt;margin:2cm}h1{font-size:14pt;color:#1a56db}h2{font-size:11pt;border-bottom:1px solid #ccc;padding-bottom:2pt}table{border-collapse:collapse;width:100%;font-size:8.5pt}th{background:#1a56db;color:#fff;padding:3pt 5pt;text-align:left}td{padding:2pt 5pt;border-bottom:1px solid #eee}tr:nth-child(even)td{background:#f9f9f9}</style></head><body>`;
   d+=`<h1>Rapport Karting EVOMEKA — ${new Date().toLocaleDateString("fr-FR")}</h1><p>${runs.length} run(s)</p>`;
@@ -2230,7 +2361,7 @@ function exportWeekendWord(){
 
 /* ===== EXPORT EXCEL (CSV) ===== */
 function exportWeekendExcel(){
-  const runs=getRuns();
+  const runs=getRunsRO();
   if(!runs.length){alert("Aucun run.");return;}
   const sep=";";
   const H=["Circuit","Session","Date","Heure","Pilote","Grip","Meilleur tour","Tour moyen","σ","RPM max","RPM mini","EGT haut","EGT bas","CHT","T° piste","Voie AV","Voie AR","Raidisseur","Rapport","Axe AR h","Axe AR l","Axe bridé","Barre AV","Lest kg","Rép. lest","P AVG froid","P AVD froid","P ARG froid","P ARD froid","P AVG chaud","P AVD chaud","P ARG chaud","P ARD chaud","Problème","Action testée","Entrée","Milieu","Sortie","Freinage","Ressenti libre","Commentaires","Vis L","Vis H","T° air","Humidité","Vent km/h","Pression hPa","Densité air"];
@@ -2247,34 +2378,140 @@ function exportWeekendExcel(){
 async function generateWeekendSummary(){
   const box=document.getElementById("weekend_summary_box");
   const btn=document.getElementById("weekend_summary_btn");
-  const runs=getRuns();
+  const runs=getRunsRO();
   if(!runs.length){box.innerHTML='<div class="alert alert-warn">Aucun run sauvegardé.</div>';return;}
   box.innerHTML='<div class="alert" style="background:#1e293b"><span class="pill pill-info">⏳ Analyse IA en cours...</span></div>';
   if(btn) btn.disabled=true;
-  const txt=runs.slice(0,20).map((r,i)=>[
-    `Run ${i+1}: ${r.circuit||"?"} · ${r.session||"?"} · ${r.date||"?"}  Pilote: ${r.pilote||"?"}`,
-    `  Chrono: best=${r.best_lap||"?"} moy=${r.avg_lap||"?"} σ=${r.std_lap||"?"}`,
-    `  RPM max=${r.rpm_max||"?"} sortie=${r.rpm_sortie||"?"}  EGT H=${r.egt_haut||"?"} L=${r.egt_bas||"?"} CHT=${r.cht||"?"}`,
-    `  Voie AV=${r.voie_av||"?"} AR=${r.voie_ar||"?"}  Raidisseur=${r.raidisseur||"?"}  Rapport=${r.rapport||"?"}`,
-    `  Entrée=${r.entree||"?"} Milieu=${r.milieu||"?"} Sortie=${r.sortie||"?"} Freinage=${r.freinage||"?"}`,
-    `  Problème=${r.probleme||"?"} Action=${r.action_testee||"?"}`,
-    `  P pneus: AVG ${r.avg_f||"?"}→${r.avg_c||"?"} ARG ${r.arg_f||"?"}→${r.arg_c||"?"}`,
-    r.ressenti_libre?`  Ressenti: ${r.ressenti_libre}`:"",
-    r.commentaires?`  Commentaires: ${r.commentaires}`:""
-  ].filter(Boolean).join("\n")).join("\n\n");
-  const prompt=`Tu es expert karting KA100/Rotax. Analyse ces ${runs.length} runs et donne en français:\n1. Résumé chronos et progression\n2. Analyse carburation (EGT/CHT) et réglages châssis (voie, raidisseur, rapport)\n3. Problèmes récurrents et causes\n4. 3-5 actions concrètes prioritaires\n5. Conseils pour les prochains circuits\n\nSois précis, technique, concis. Cite les valeurs.\n\nDONNÉES:\n${txt}`;
+
+  const runsData = runs.slice(0,20).map((r,i)=>({
+    num: i+1, circuit: r.circuit||null, session: r.session||null, date: r.date||null, pilote: r.pilote||null,
+    chronos: { best: r.best_lap||null, moyenne: r.avg_lap||null, sigma: r.std_lap||null },
+    moteur: { rpm_max: r.rpm_max||null, rpm_sortie: r.rpm_sortie||null, egt_haut: r.egt_haut||null, egt_bas: r.egt_bas||null, cht: r.cht||null, vis_h: r.vis_h||null, vis_l: r.vis_l||null },
+    chassis: { voie_av: r.voie_av||null, voie_ar: r.voie_ar||null, raidisseur: r.raidisseur||null, rapport: r.rapport||null, axe_h: r.axe_h||null, axe_l: r.axe_l||null, barre_av: r.barre_av||null, moyeux: r.moyeux||null },
+    pressions: { avg_f: r.avg_f||null, avg_c: r.avg_c||null, avd_f: r.avd_f||null, avd_c: r.avd_c||null, arg_f: r.arg_f||null, arg_c: r.arg_c||null, ard_f: r.ard_f||null, ard_c: r.ard_c||null },
+    ressenti: { entree: r.entree||null, milieu: r.milieu||null, sortie: r.sortie||null, freinage: r.freinage||null },
+    probleme: r.probleme||null, action_testee: r.action_testee||null,
+    notes: [r.ressenti_libre, r.commentaires].filter(Boolean).join(" / ")||null,
+    meteo: r.weather ? { temp_air: r.weather.temp, humidite: r.weather.hum, vent_kmh: r.weather.wind, densite: r.weather.density } : null
+  }));
+
+  const systemPrompt = `Tu es ingénieur karting expert KA100 / Mach1 / Komet K3H slicks.
+Tu analyses les données de session et produis un rapport technique structuré.
+Règles : cite TOUJOURS les valeurs numériques. Compare les runs entre eux.
+Références KA100 : EGT haut cible 620-680°C · EGT bas 380-440°C · CHT max 220°C · RPM cible 15000-15200 · Δ pression pneus zone saine 0.15-0.30 bar.
+Sois direct et technique. Réponds en français.`;
+
+  const userPrompt = `Analyse ces ${runs.length} runs karting. Génère un rapport avec ces 5 sections :
+
+## 1. Chronos & Progression
+Évolution run par run, meilleur chrono, constance (sigma), tendance.
+
+## 2. Carburation (EGT/CHT)
+État vis H et vis L avec valeurs. Dérives. Actions concrètes.
+
+## 3. Châssis & Réglages
+Voie AV/AR, raidisseur, rapport. Ce qui a fonctionné, ce qui n'a pas.
+
+## 4. Problèmes Récurrents
+Patterns dans les ressentis et problèmes déclarés. Causes probables.
+
+## 5. Actions Prioritaires
+3 à 5 actions numérotées pour le prochain run, avec valeurs cibles précises.
+
+DONNÉES JSON :
+${JSON.stringify(runsData, null, 1)}`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(()=>controller.abort(), 25000);
+
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
-    const json=await resp.json();
-    const text=(json.content||[]).map(c=>c.text||"").join("").trim();
-    if(!text) throw new Error("Réponse vide");
-    const h=text.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/^#{1,3}\s+(.+)$/gm,'<h3 style="margin:8px 0 3px;font-size:13px;color:#86efac">$1</h3>').replace(/^[\-\d]+\.?\s+/gm,"<br>• ").replace(/\n/g,"<br>");
-    box.innerHTML=`<div class="diag" style="font-size:13px;line-height:1.5">${h}</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn1" type="button" onclick="exportPDF()" style="background:#7c3aed;min-height:36px;font-size:12px">PDF</button><button class="btn2" type="button" onclick="exportWeekendWord()" style="min-height:36px;font-size:12px">Word</button><button class="btn2" type="button" onclick="exportWeekendExcel()" style="min-height:36px;font-size:12px">Excel</button></div>`;
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers: {"Content-Type":"application/json"}, signal: controller.signal,
+      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1500,
+        system: systemPrompt, messages: [{role:"user", content:userPrompt}] })
+    });
+    clearTimeout(timeoutId);
+    if(!resp.ok){ const e=await resp.json().catch(()=>({})); throw new Error(e?.error?.message||`HTTP ${resp.status}`); }
+    const json = await resp.json();
+    if(json.error) throw new Error(json.error.message||"Erreur API");
+    const text = (json.content||[]).map(c=>c.text||"").join("").trim();
+    if(!text) throw new Error("Réponse vide — réessaie dans quelques secondes");
+    const h = text
+      .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+      .replace(/^#{1,3}\s+(.+)$/gm,'<h3 style="margin:10px 0 4px;font-size:13px;color:#86efac;border-bottom:1px solid rgba(134,239,172,.2);padding-bottom:3px">$1</h3>')
+      .replace(/^\d+\.\s+/gm,"<br>• ").replace(/^[-•]\s+/gm,"<br>• ").replace(/\n/g,"<br>");
+    box.innerHTML=`<div class="diag" style="font-size:13px;line-height:1.6">${h}</div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn1" type="button" onclick="exportPDF()" style="background:#7c3aed;min-height:36px;font-size:12px">📄 PDF</button>
+        <button class="btn2" type="button" onclick="exportWeekendWord()" style="min-height:36px;font-size:12px">📝 Word</button>
+        <button class="btn2" type="button" onclick="exportWeekendExcel()" style="min-height:36px;font-size:12px">📊 Excel</button>
+        <button class="btn2" type="button" onclick="generateWeekendSummary()" style="min-height:36px;font-size:12px">🔄 Regénérer</button>
+      </div>`;
   }catch(e){
-    box.innerHTML=`<div class="alert alert-bad">❌ ${e.message}</div>`;
+    clearTimeout(timeoutId);
+    const msg = e.name==="AbortError" ? "Délai dépassé (25s). Réessaie." : e.message;
+    box.innerHTML=`<div class="alert alert-bad">❌ ${msg}<br><button class="btn2" type="button" onclick="generateWeekendSummary()" style="margin-top:8px;min-height:34px;font-size:12px">🔄 Réessayer</button></div>`;
   }
   if(btn) btn.disabled=false;
 }
+
+
+
+
+/* ===== SURPRISE 3 : AIDE CONTEXTUELLE EGT INLINE ===== */
+function showEgtTip(vis){
+  const tips = {
+    H: {
+      title: "EGT haut — Vis H (haut régime)",
+      zones: [
+        {range:"< 570°C", cls:"pill-info", msg:"Très riche — fermer H de 1/8 de tour"},
+        {range:"570–619°C", cls:"pill-warn", msg:"Riche — fermer H de 1/30 (« 2 minutes »)"},
+        {range:"620–680°C", cls:"pill-ok", msg:"Zone optimale ✓ — ne rien changer"},
+        {range:"681–700°C", cls:"pill-warn", msg:"Limite haute — surveiller, ouvrir si ça monte"},
+        {range:"701–730°C", cls:"pill-bad", msg:"⚠ Pauvre — risque serrage, ouvrir H de 1/8"},
+        {range:"> 730°C", cls:"pill-bad", msg:"🚨 DANGER — STOP, enrichir 1/4 de tour minimum"},
+      ],
+      note: "Mesurer en bout de ligne droite (RPM max). Source : KA100 / Tillotson HW-33A."
+    },
+    L: {
+      title: "EGT bas — Vis L (bas régime)",
+      zones: [
+        {range:"< 350°C", cls:"pill-info", msg:"Très riche — fermer L de 1/8"},
+        {range:"350–379°C", cls:"pill-warn", msg:"Riche — fermer L de 1/30"},
+        {range:"380–440°C", cls:"pill-ok", msg:"Zone optimale ✓ — ne rien changer"},
+        {range:"441–460°C", cls:"pill-warn", msg:"Pauvre — ouvrir L de 1/30"},
+        {range:"> 460°C", cls:"pill-bad", msg:"⚠ Trop pauvre — ouvrir L de 1/16"},
+      ],
+      note: "Mesurer en sortie de virage lent (reprise gaz). Source : KA100 / Tillotson HW-33A."
+    }
+  };
+  const t = tips[vis];
+  if(!t) return;
+  const existing = document.getElementById("egt_tip_modal");
+  if(existing) existing.remove();
+  const modal = document.createElement("div");
+  modal.id = "egt_tip_modal";
+  modal.style.cssText = "position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;padding:0 0 calc(80px + env(safe-area-inset-bottom))";
+  modal.innerHTML = `<div style="background:#111827;border:1px solid rgba(148,163,184,.25);border-radius:16px 16px 0 0;padding:16px;max-width:520px;width:100%;max-height:70vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong style="font-size:14px">${t.title}</strong>
+      <button onclick="document.getElementById('egt_tip_modal').remove()" style="background:#334155;border:0;border-radius:8px;color:#fff;padding:4px 10px;font-size:12px;cursor:pointer">✕ Fermer</button>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <tr style="color:#94a3b8;font-size:11px"><th style="padding:4px 6px;text-align:left">Plage</th><th style="padding:4px 6px;text-align:left">Interprétation & action</th></tr>
+      ${t.zones.map(z=>`<tr><td style="padding:5px 6px;border-bottom:1px solid rgba(148,163,184,.1);white-space:nowrap"><span class="pill ${z.cls}">${z.range}</span></td><td style="padding:5px 6px;border-bottom:1px solid rgba(148,163,184,.1);font-size:12px">${z.msg}</td></tr>`).join("")}
+    </table>
+    <div style="font-size:11px;color:#64748b;margin-top:8px">${t.note}</div>
+  </div>`;
+  modal.addEventListener("click", e=>{ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+/* ===== DEBOUNCED WRAPPERS ===== */
+const updateDiagDebounced = debounce(updateDiag, 300);
+const updateCarbDebounced = debounce(updateCarbAnalysis, 300);
+const updateLapStatsDebounced = debounce(updateLapStats, 200);
+const saveFormDebounced = debounce(saveFormIdle, 500);
 
 /* ===== INIT ===== */
 function init(){
@@ -2294,18 +2531,18 @@ function init(){
   document.getElementById('rapport')?.addEventListener('input', updateRapportCalc);
   ["probleme","rpm_max","entree","sortie","freinage"].forEach(id=>{
     const el=document.getElementById(id);
-    if(el){ el.addEventListener("change",updateDiag); el.addEventListener("input",updateDiag); }
+    if(el){ el.addEventListener("change",updateDiagDebounced); el.addEventListener("input",updateDiagDebounced); }
   });
   ["egt_bas","egt_haut","cht","cible_haut_min","cible_haut_max","cible_bas_min","cible_bas_max"].forEach(id=>{
     const el=document.getElementById(id);
-    if(el){ el.addEventListener("input",updateCarbAnalysis); }
+    if(el){ el.addEventListener("input",updateCarbDebounced); }
   });
   // Autosave : on change/blur uniquement, pas oninput partout (perf)
   ALL_IDS.forEach(id=>{
     const el=document.getElementById(id);
     if(el){
-      el.addEventListener("change",saveForm);
-      el.addEventListener("blur",saveForm);
+      el.addEventListener("change",saveFormDebounced);
+      el.addEventListener("blur",saveFormIdle);
     }
   });
 }
