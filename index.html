@@ -1675,6 +1675,18 @@ async function parseAlfano(ev){
       let lapEgtBasSum = 0, lapEgtBasCount = 0;
       let lapChtMax = 0;
       let lapSpeedMax = 0, lapSpeedMin = Infinity;
+      // --- BAS REEL : on ne prend plus le min brut (fausse par sortie/rentree/stand)
+      // mais un percentile bas sur les echantillons ou le kart roule vraiment.
+      const LOW_Q = 0.02;            // p2. Mets 0.05 pour p5 (plus conservateur).
+      const LOW_SPEED_FLOOR = 200;   // 20.0 km/h (x10) : en dessous = stand/rampage, exclu
+      const sessRpmLow = [];
+      const sessSpeedLow = [];
+      const pctile = (arr,q)=>{
+        if(!arr.length) return null;
+        const s=[...arr].sort((a,b)=>a-b);
+        const i=Math.max(0,Math.min(s.length-1,Math.round(s.length*q)));
+        return s[i];
+      };
       for(const lf of lapFiles){
         const text = await lf.text();
         const lines = text.split(/\r?\n/).filter(l=>l.trim());
@@ -1695,6 +1707,20 @@ async function parseAlfano(ev){
           const med = sorted[1];
           if(med>0 && med<18000 && med>lapRpmMax) lapRpmMax = med;
           if(med>3000 && med<lapRpmMin) lapRpmMin = med;
+        }
+        // --- collecte BAS REEL : RPM lisse (mediane-3) + vitesse, uniquement kart en mouvement ---
+        const _spd = [];
+        for(let i=1;i<lines.length;i++){
+          const cells = lines[i].split(",");
+          if(isNaN(parseFloat(cells[cRpm]))) continue;          // meme filtre que rpms[] -> reste aligne
+          _spd.push(parseFloat(cells[cSpeed]));
+        }
+        for(let i=1;i<rpms.length-1;i++){
+          const s = _spd[i];                                   // _spd[i] et rpms[i] = meme ligne
+          if(isNaN(s) || s<=LOW_SPEED_FLOOR) continue;
+          const srt = [rpms[i-1],rpms[i],rpms[i+1]].sort((a,b)=>a-b);
+          const med = srt[1];
+          if(med>0){ sessRpmLow.push(med); sessSpeedLow.push(s); }
         }
         // T2 (EGT) : on calcule min ET max sur ce tour, puis on accumule pour la moyenne
         let tourEgtMax = 0, tourEgtMin = Infinity;
@@ -1720,7 +1746,8 @@ async function parseAlfano(ev){
         if(tourEgtMin<Infinity){ lapEgtBasSum += tourEgtMin; lapEgtBasCount++; }
       }
       if(lapRpmMax>0) imported.rpmMax = lapRpmMax;
-      if(lapRpmMin<Infinity) imported.rpmMin = lapRpmMin;
+      const _rpmLow = pctile(sessRpmLow, LOW_Q);
+      if(_rpmLow!=null) imported.rpmMin = Math.round(_rpmLow);  // bas reel (p2), plus le min brut
       // Si les LAP_X ont fourni assez de données EGT, ils remplacent l'estimation issue du SN
       if(lapEgtHautCount > 0){
         imported.egtHautSum = lapEgtHautSum;
@@ -1732,7 +1759,8 @@ async function parseAlfano(ev){
       }
       if(lapChtMax>imported.chtMax) imported.chtMax = lapChtMax;
       if(lapSpeedMax>imported.speedMax) imported.speedMax = lapSpeedMax;
-      if(lapSpeedMin<imported.speedMin) imported.speedMin = lapSpeedMin;
+      const _spdLow = pctile(sessSpeedLow, LOW_Q);
+      if(_spdLow!=null) imported.speedMin = _spdLow;            // bas reel (p2), x10 conserve
     }
 
     // 3. Appliquer les valeurs aux champs avec gestion des conflits
