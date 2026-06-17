@@ -1041,10 +1041,10 @@ function buildLaps(){
   for(let i=1;i<=15;i++){
     html += `<div class="lap-row">
       <div class="lap-num">${i}</div>
-      <input id="lap_${i}_1" inputmode="decimal" placeholder="Tour" oninput="updateLapStatsDebounced();saveFormDebounced()">
-      <input id="lap_${i}_2" inputmode="decimal" placeholder="P1" oninput="saveForm()">
-      <input id="lap_${i}_3" inputmode="decimal" placeholder="P2" class="partial-extra" oninput="saveForm()">
-      <input id="lap_${i}_4" inputmode="decimal" placeholder="P3" class="partial-extra" oninput="saveForm()">
+      <input id="lap_${i}_1" inputmode="decimal" placeholder="Tour" oninput="updateLapStatsDebounced();saveFormDebounced()" onblur="reformatLap(this);updateLapStats()">
+      <input id="lap_${i}_2" inputmode="decimal" placeholder="P1" oninput="saveForm()" onblur="reformatLap(this)">
+      <input id="lap_${i}_3" inputmode="decimal" placeholder="P2" class="partial-extra" oninput="saveForm()" onblur="reformatLap(this)">
+      <input id="lap_${i}_4" inputmode="decimal" placeholder="P3" class="partial-extra" oninput="saveForm()" onblur="reformatLap(this)">
     </div>`;
   }
   document.getElementById("laps_container").innerHTML = html;
@@ -1066,6 +1066,21 @@ function fmtLap(t){
     return `${m}:${s.toFixed(3).padStart(6,"0")}`;
   }
   return t.toFixed(3);
+}
+// Reformate un champ chrono en m:ss.mmm si >=60s (au blur de la saisie manuelle)
+function reformatLap(el){
+  if(!el || !el.value) return;
+  const t = parseLap(el.value);
+  if(t!=null){ el.value = fmtLap(t); saveForm(); }
+}
+// Reformate tous les champs chrono (apres chargement d'un run / brouillon)
+function reformatAllLaps(){
+  LAP_IDS.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el || !el.value) return;
+    const t=parseLap(el.value);
+    if(t!=null) el.value=fmtLap(t);
+  });
 }
 function updateLapStats(){
   const laps=[];
@@ -1102,6 +1117,7 @@ function loadForm(){
     const comboIds=['circuit','session','pilote','grip','entree','milieu','sortie','freinage','probleme','raidisseur','barre_av','pneu_type','jante_type','moyeux','voie_av'];
     comboIds.forEach(id=>{ if(d[id]!==undefined) comboRestore(id,d[id]); });
     if(d.weather){ window._weather = d.weather; renderWeather(); }
+    reformatAllLaps();
   }catch(e){console.warn(e)}
 }
 // getRuns() : deep copy — à utiliser UNIQUEMENT quand on va muter le résultat (saveRun, loadRun, importJSON)
@@ -1836,11 +1852,11 @@ async function parseAlfano(ev){
       }
     }
     imported.laps.sort((a,b)=>a.n-b.n).slice(0,15).forEach((lt,i)=>{
-      setv(`lap_${i+1}_1`, lt.t.toFixed(3));
+      setv(`lap_${i+1}_1`, fmtLap(lt.t));
       let line = `Tour ${i+1} : ${fmtLap(lt.t)}`;
-      if(lt.p1){ setv(`lap_${i+1}_2`, lt.p1.toFixed(3)); line += ` · P1 ${lt.p1.toFixed(3)}`; }
-      if(lt.p2){ setv(`lap_${i+1}_3`, lt.p2.toFixed(3)); line += ` · P2 ${lt.p2.toFixed(3)}`; }
-      if(lt.p3){ setv(`lap_${i+1}_4`, lt.p3.toFixed(3)); line += ` · P3 ${lt.p3.toFixed(3)}`; }
+      if(lt.p1){ setv(`lap_${i+1}_2`, fmtLap(lt.p1)); line += ` · P1 ${fmtLap(lt.p1)}`; }
+      if(lt.p2){ setv(`lap_${i+1}_3`, fmtLap(lt.p2)); line += ` · P2 ${fmtLap(lt.p2)}`; }
+      if(lt.p3){ setv(`lap_${i+1}_4`, fmtLap(lt.p3)); line += ` · P3 ${fmtLap(lt.p3)}`; }
       applied.push(line);
     });
 
@@ -2067,6 +2083,7 @@ function loadRun(id){
   }
   window._currentRunId = id;
   updateSaveButtonLabel();
+  reformatAllLaps();
   updateDiag(); updateLapStats(); updatePressureDelta(); updateCarbAnalysis();
   saveForm();
   switchView("fiche");
